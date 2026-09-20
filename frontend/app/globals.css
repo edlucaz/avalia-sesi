@@ -1,10 +1,14 @@
 :root {
-  --sesi-vermelho: #da291c;
-  --sesi-azul-marinho: #1b2a4a;
+  /* Paleta extraída de araras.sesisp.org.br — mesmo vermelho institucional,
+     azul de rodapé e tom de texto do site oficial da unidade. */
+  --sesi-vermelho: #e30513;
+  --sesi-vermelho-escuro: #6e160c;
+  --sesi-azul-marinho: #074a71;
   --sesi-amarelo: #e3a73b;
-  --sesi-creme: #f2e8d5;
-  --texto-escuro: #1b2a4a;
+  --texto-escuro: #262626;
+  --texto-suave: #6c757d;
   --fundo-prova: #fafafa;
+  --fundo-secao: #f5f5f5;
   --borda: #e2e2e2;
   --verde-acerto: #1e8a4c;
   --vermelho-erro: #c62828;
@@ -18,7 +22,7 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: var(--font-inter), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--font-source-sans), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   color: var(--texto-escuro);
   background: var(--fundo-prova);
 }
@@ -49,20 +53,46 @@ a:focus-visible {
   justify-content: space-between;
 }
 
-.selo {
+.barra-topo {
+  height: 6px;
   background: var(--sesi-vermelho);
-  color: white;
-  font-style: italic;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 4px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.marca img {
+  display: block;
+  height: 30px;
+  width: auto;
+}
+
+.marca-unidade {
   font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--texto-suave);
+}
+
+.marca-grande img {
+  height: 40px;
+}
+
+.marca-grande .marca-unidade {
+  font-size: 18px;
+}
+
+.cabecalho .marca-unidade {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .tela-boas-vindas {
   min-height: 100vh;
-  background: var(--sesi-creme);
+  background: var(--fundo-secao);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -122,9 +152,9 @@ a:focus-visible {
   font-weight: 700;
   color: white;
   background: var(--sesi-vermelho);
-  border: none;
+  border: 2px solid var(--sesi-vermelho);
   border-radius: 10px;
-  transition: opacity 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 
 .botao-primario:disabled {
@@ -133,7 +163,8 @@ a:focus-visible {
 }
 
 .botao-primario:not(:disabled):hover {
-  opacity: 0.9;
+  background: white;
+  color: var(--sesi-vermelho);
 }
 
 .botao-secundario {
@@ -145,6 +176,12 @@ a:focus-visible {
   background: white;
   border: 2px solid var(--sesi-azul-marinho);
   border-radius: 10px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.botao-secundario:not(:disabled):hover {
+  background: var(--sesi-azul-marinho);
+  color: white;
 }
 
 .erro {
@@ -192,7 +229,7 @@ a:focus-visible {
 
 .tag {
   display: inline-block;
-  background: var(--sesi-creme);
+  background: var(--fundo-secao);
   color: var(--sesi-azul-marinho);
   font-size: 12px;
   font-weight: 600;
@@ -320,7 +357,7 @@ a:focus-visible {
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  background: var(--sesi-creme);
+  background: var(--fundo-secao);
   color: var(--sesi-azul-marinho);
   font-weight: 700;
   display: flex;
@@ -376,7 +413,7 @@ a:focus-visible {
 }
 
 .resultado-cabecalho {
-  background: var(--sesi-creme);
+  background: var(--fundo-secao);
   padding: 32px 20px;
   text-align: center;
 }
@@ -574,7 +611,7 @@ a:focus-visible {
 }
 
 .tabela-alunos tbody tr:hover {
-  background: var(--sesi-creme);
+  background: var(--fundo-secao);
 }
 
 .status-pill {

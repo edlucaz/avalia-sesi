@@ -13,7 +13,7 @@ vida e schema diferentes — ver detalhes no documento de especificação).
 - **Backend**: FastAPI + SQLAlchemy. SQLite em desenvolvimento, Postgres em
   produção (`DATABASE_URL`).
 - **Frontend**: Next.js 14 (App Router) + TypeScript, sem dependências de UI
-  externas (CSS puro com a identidade visual SESI/SENAI).
+  externas (CSS puro com a identidade visual da Escola SESI Araras).
 - **Deploy sugerido**: Vercel (frontend) + Coolify (backend/banco), mesma
   conta já usada no turma-ds.
 
@@ -31,11 +31,22 @@ a meta institucional, ranking de habilidades com mais erro).
 
 Cuidados de UI/UX aplicados pensando no público-alvo (crianças de 8 a 10
 anos no fluxo do aluno, professores no painel administrativo): fonte
-consistente (Inter), favicon com o selo institucional, estados de
-carregamento com skeleton em vez de texto solto, estados vazios com
-ilustração e texto de apoio, feedback visual de foco por teclado, ícones de
-acerto/erro além da cor (acessibilidade a daltonismo), e campo de token do
-professor com máscara e opção de mostrar/ocultar.
+consistente, favicon com o selo institucional, estados de carregamento com
+skeleton em vez de texto solto, estados vazios com ilustração e texto de
+apoio, feedback visual de foco por teclado, ícones de acerto/erro além da
+cor (acessibilidade a daltonismo), e campo de token do professor com
+máscara e opção de mostrar/ocultar.
+
+### Identidade visual
+
+Este app **não é integrado** ao site institucional, mas segue o mesmo
+padrão visual de [araras.sesisp.org.br](https://araras.sesisp.org.br/) para
+não destoar: logo oficial da unidade (`frontend/public/sesi-logo.png`),
+vermelho institucional `#e30513`, azul `#074a71` (mesmo tom do rodapé do
+site), tipografia Source Sans Pro (a Gotham usada no site é uma fonte paga,
+sem licença livre para embutir aqui) e o mesmo padrão de botão
+(preenchido, inverte cor no hover). A referência ao SENAI foi removida por
+ora — o foco atual é só a Escola SESI Araras.
 
 Ainda não entraram: importação do banco de questões via upload (hoje o banco
 é populado por `seed.py`, com dados de exemplo), autenticação real do

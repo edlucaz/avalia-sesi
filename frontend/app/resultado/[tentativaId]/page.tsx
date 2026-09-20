@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ApiError, ResultadoTentativa, buscarResultado } from "@/lib/api";
 import { corDesempenho } from "@/lib/desempenho";
 import { lerSessao } from "@/lib/session";
+import Marca from "@/components/Marca";
 
 const NOME_DISCIPLINA: Record<string, string> = {
   portugues: "Português",
@@ -62,8 +63,8 @@ export default function ResultadoPage() {
   return (
     <div>
       <div className="resultado-cabecalho">
-        <div className="selo" style={{ marginBottom: 16, display: "inline-block" }}>
-          SESI | SENAI
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+          <Marca tamanho="grande" />
         </div>
         <p className="subtitulo" style={{ marginBottom: 4 }}>
           {resultado.simulado_titulo}

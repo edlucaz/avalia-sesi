@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, listarTurmas, ApiError } from "@/lib/api";
 import { salvarSessao } from "@/lib/session";
+import Marca from "@/components/Marca";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,8 +45,8 @@ export default function LoginPage() {
   return (
     <div className="tela-boas-vindas">
       <div className="cartao">
-        <div className="selo" style={{ marginBottom: 20, display: "inline-block" }}>
-          SESI | SENAI
+        <div style={{ marginBottom: 20 }}>
+          <Marca tamanho="grande" />
         </div>
         <h1>Avalia SESI</h1>
         <p className="subtitulo">Entre com seu RM e sua turma para ver os simulados.</p>

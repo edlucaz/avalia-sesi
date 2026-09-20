@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { listarSimulados, SimuladoResumo } from "@/lib/api";
 import { lerSessao, limparSessao } from "@/lib/session";
+import Marca from "@/components/Marca";
 
 const NOME_DISCIPLINA: Record<string, string> = {
   portugues: "Português",
@@ -35,7 +36,7 @@ export default function ListaSimuladosPage() {
   return (
     <div>
       <header className="cabecalho">
-        <div className="selo">SESI | SENAI</div>
+        <Marca />
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span>{nomeAluno}</span>
           <button className="botao-secundario" style={{ width: "auto", padding: "8px 16px" }} onClick={sair}>

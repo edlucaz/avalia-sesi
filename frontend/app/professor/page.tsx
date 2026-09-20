@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ApiError, PainelSimulado, buscarPainelProfessor } from "@/lib/api";
 import { corDesempenho } from "@/lib/desempenho";
+import Marca from "@/components/Marca";
 
 const NOME_DISCIPLINA: Record<string, string> = {
   portugues: "Português",
@@ -36,7 +37,7 @@ export default function PainelProfessorPage() {
   return (
     <div>
       <header className="cabecalho">
-        <div className="selo">SESI | SENAI</div>
+        <Marca />
         <span>Painel do professor</span>
       </header>
 
