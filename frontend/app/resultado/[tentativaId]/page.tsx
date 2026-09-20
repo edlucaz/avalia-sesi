@@ -1,0 +1,126 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ApiError, ResultadoTentativa, buscarResultado } from "@/lib/api";
+import { lerSessao } from "@/lib/session";
+
+const NOME_DISCIPLINA: Record<string, string> = {
+  portugues: "Português",
+  matematica: "Matemática",
+};
+
+export default function ResultadoPage() {
+  const router = useRouter();
+  const params = useParams<{ tentativaId: string }>();
+  const [resultado, setResultado] = useState<ResultadoTentativa | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    const sessao = lerSessao();
+    if (!sessao) {
+      router.replace("/login");
+      return;
+    }
+    buscarResultado(sessao.token, Number(params.tentativaId))
+      .then(setResultado)
+      .catch((err) =>
+        setErro(err instanceof ApiError ? err.message : "Não foi possível carregar o resultado.")
+      );
+  }, [params.tentativaId, router]);
+
+  if (erro) {
+    return (
+      <div className="tela-boas-vindas">
+        <div className="cartao">
+          <div className="erro">{erro}</div>
+          <button className="botao-secundario" onClick={() => router.push("/simulados")}>
+            Voltar aos simulados
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!resultado) return null;
+
+  return (
+    <div>
+      <div className="resultado-cabecalho">
+        <div className="selo" style={{ marginBottom: 16, display: "inline-block" }}>
+          SESI | SENAI
+        </div>
+        <p className="subtitulo" style={{ marginBottom: 4 }}>
+          {resultado.simulado_titulo}
+        </p>
+        <div className="nota-grande">{resultado.nota_geral}%</div>
+        <p>
+          {resultado.total_acertos} de {resultado.total_questoes} questões corretas
+        </p>
+      </div>
+
+      <div className="pagina">
+        <h2>Desempenho por habilidade</h2>
+        {resultado.desempenho_por_habilidade.map((h) => (
+          <div key={h.habilidade} style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+              <span>
+                {h.habilidade} · {NOME_DISCIPLINA[h.disciplina] || h.disciplina}
+              </span>
+              <strong>
+                {h.acertos}/{h.total} ({h.percentual}%)
+              </strong>
+            </div>
+            <div className="barra-habilidade">
+              <div style={{ width: `${h.percentual}%` }} />
+            </div>
+          </div>
+        ))}
+
+        <h2 style={{ marginTop: 32 }}>Gabarito comentado</h2>
+        {resultado.questoes.map((q, i) => (
+          <div className="questao-comentada" key={q.questao_id}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span className="tag">
+                Questão {i + 1} · {NOME_DISCIPLINA[q.disciplina] || q.disciplina} · {q.habilidade}
+              </span>
+              <span className={`badge-acerto ${q.acerto ? "certo" : "errado"}`}>
+                {q.acerto ? "Acertou" : "Errou"}
+              </span>
+            </div>
+            <p>{q.enunciado}</p>
+            <div style={{ fontSize: 14 }}>
+              {Object.entries(q.alternativas).map(([letra, texto]) => {
+                const ehGabarito = letra === q.gabarito;
+                const ehMarcada = letra === q.alternativa_marcada;
+                return (
+                  <div
+                    key={letra}
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 8,
+                      marginBottom: 4,
+                      background: ehGabarito ? "#e5f4ea" : ehMarcada ? "#fdecea" : "transparent",
+                      fontWeight: ehGabarito || ehMarcada ? 600 : 400,
+                    }}
+                  >
+                    {letra.toUpperCase()}) {texto}
+                    {ehGabarito && " ✓ gabarito"}
+                    {ehMarcada && !ehGabarito && " — sua resposta"}
+                  </div>
+                );
+              })}
+              {!q.alternativa_marcada && (
+                <div style={{ color: "#667", fontStyle: "italic" }}>Você não respondeu esta questão.</div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        <button className="botao-secundario" onClick={() => router.push("/simulados")}>
+          Voltar aos simulados
+        </button>
+      </div>
+    </div>
+  );
+}
