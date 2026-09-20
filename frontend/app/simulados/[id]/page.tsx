@@ -26,7 +26,17 @@ export default function InstrucoesSimuladoPage() {
     });
   }, [params.id, router]);
 
-  if (!simulado) return null;
+  if (!simulado) {
+    return (
+      <div className="tela-boas-vindas">
+        <div className="cartao">
+          <div className="skeleton" style={{ height: 28, width: "70%", marginBottom: 16 }} />
+          <div className="skeleton" style={{ height: 100, marginBottom: 20 }} />
+          <div className="skeleton" style={{ height: 52 }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="tela-boas-vindas">

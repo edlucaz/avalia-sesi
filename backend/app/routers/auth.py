@@ -9,6 +9,12 @@ from app.schemas import AlunoOut, LoginRequest, LoginResponse
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+@router.get("/turmas", response_model=list[str])
+def listar_turmas(db: Session = Depends(get_db)):
+    turmas = db.query(Turma).order_by(Turma.nome).all()
+    return [t.nome for t in turmas]
+
+
 @router.post("/login", response_model=LoginResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     aluno = (

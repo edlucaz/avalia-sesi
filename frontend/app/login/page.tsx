@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, ApiError } from "@/lib/api";
+import { login, listarTurmas, ApiError } from "@/lib/api";
 import { salvarSessao } from "@/lib/session";
 
 export default function LoginPage() {
   const router = useRouter();
   const [rm, setRm] = useState("");
   const [turma, setTurma] = useState("");
+  const [turmas, setTurmas] = useState<string[] | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    listarTurmas()
+      .then((lista) => {
+        setTurmas(lista);
+        if (lista.length) setTurma(lista[0]);
+      })
+      .catch(() => setTurmas([]));
+  }, []);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
@@ -21,7 +31,11 @@ export default function LoginPage() {
       salvarSessao(resposta.access_token, resposta.aluno);
       router.push("/simulados");
     } catch (err) {
-      setErro(err instanceof ApiError ? err.message : "Não foi possível entrar. Tente de novo.");
+      setErro(
+        err instanceof ApiError && err.status === 401
+          ? "RM ou turma incorretos. Confira com seu professor e tente de novo."
+          : "Não foi possível entrar. Tente de novo."
+      );
     } finally {
       setCarregando(false);
     }
@@ -48,22 +62,32 @@ export default function LoginPage() {
               value={rm}
               onChange={(e) => setRm(e.target.value)}
               required
+              autoFocus
             />
           </div>
           <div className="campo">
             <label htmlFor="turma">Sua turma</label>
-            <input
-              id="turma"
-              placeholder="Ex: 5A"
-              value={turma}
-              onChange={(e) => setTurma(e.target.value)}
-              required
-            />
+            {turmas === null ? (
+              <div className="skeleton" style={{ height: 52 }} />
+            ) : (
+              <select id="turma" value={turma} onChange={(e) => setTurma(e.target.value)} required>
+                {turmas.length === 0 && <option value="">Nenhuma turma cadastrada</option>}
+                {turmas.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
-          <button className="botao-primario" type="submit" disabled={carregando}>
+          <button className="botao-primario" type="submit" disabled={carregando || !turma}>
             {carregando ? "Entrando..." : "Entrar"}
           </button>
         </form>
+
+        <p style={{ fontSize: 13, color: "#778", textAlign: "center", marginTop: 18, marginBottom: 0 }}>
+          Não sabe seu RM ou sua turma? Peça ajuda ao seu professor.
+        </p>
       </div>
     </div>
   );

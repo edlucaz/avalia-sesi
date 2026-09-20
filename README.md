@@ -20,12 +20,22 @@ vida e schema diferentes — ver detalhes no documento de especificação).
 ## Status
 
 **Fase 0 (fundação) implementada e testada localmente**: schema de
-questão/simulado/tentativa/resposta, login do aluno por RM + turma, listagem
-de simulados disponíveis, execução cronometrada (uma questão por tela, grade
-de navegação, marcar para revisão, confirmação de envio), correção
-automática e resultado com gabarito comentado e desempenho por habilidade, e
-um painel simples do professor (quem fez, nota média, comparação com a meta
-institucional, ranking de habilidades com mais erro).
+questão/simulado/tentativa/resposta, login do aluno por RM + turma (com
+seletor de turma alimentado por `GET /api/auth/turmas`), listagem de
+simulados disponíveis, execução cronometrada (uma questão por tela, grade de
+navegação com legenda, aviso de "resposta salva", marcar para revisão,
+confirmação de envio), correção automática e resultado com gabarito
+comentado, desempenho por habilidade e mensagem motivacional adequada à
+faixa etária, e um painel do professor (quem fez, nota média, comparação com
+a meta institucional, ranking de habilidades com mais erro).
+
+Cuidados de UI/UX aplicados pensando no público-alvo (crianças de 8 a 10
+anos no fluxo do aluno, professores no painel administrativo): fonte
+consistente (Inter), favicon com o selo institucional, estados de
+carregamento com skeleton em vez de texto solto, estados vazios com
+ilustração e texto de apoio, feedback visual de foco por teclado, ícones de
+acerto/erro além da cor (acessibilidade a daltonismo), e campo de token do
+professor com máscara e opção de mostrar/ocultar.
 
 Ainda não entraram: importação do banco de questões via upload (hoje o banco
 é populado por `seed.py`, com dados de exemplo), autenticação real do

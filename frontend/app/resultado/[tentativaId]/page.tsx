@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiError, ResultadoTentativa, buscarResultado } from "@/lib/api";
+import { corDesempenho } from "@/lib/desempenho";
 import { lerSessao } from "@/lib/session";
 
 const NOME_DISCIPLINA: Record<string, string> = {
   portugues: "Português",
   matematica: "Matemática",
 };
+
+function mensagemMotivacional(nota: number): string {
+  if (nota >= 80) return "Muito bem! Você mandou bem nesse simulado. 🎉";
+  if (nota >= 50) return "Bom trabalho! Continue treinando para melhorar ainda mais.";
+  return "Toda prática ajuda a aprender. Vamos treinar mais essas questões juntos.";
+}
 
 export default function ResultadoPage() {
   const router = useRouter();
@@ -42,7 +49,15 @@ export default function ResultadoPage() {
     );
   }
 
-  if (!resultado) return null;
+  if (!resultado) {
+    return (
+      <div className="pagina">
+        <div className="skeleton" style={{ height: 140, marginBottom: 20 }} />
+        <div className="skeleton skeleton-cartao" />
+        <div className="skeleton skeleton-cartao" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -54,9 +69,10 @@ export default function ResultadoPage() {
           {resultado.simulado_titulo}
         </p>
         <div className="nota-grande">{resultado.nota_geral}%</div>
-        <p>
+        <p style={{ marginBottom: 4 }}>
           {resultado.total_acertos} de {resultado.total_questoes} questões corretas
         </p>
+        <p className="mensagem-motivacional">{mensagemMotivacional(resultado.nota_geral)}</p>
       </div>
 
       <div className="pagina">
@@ -72,7 +88,7 @@ export default function ResultadoPage() {
               </strong>
             </div>
             <div className="barra-habilidade">
-              <div style={{ width: `${h.percentual}%` }} />
+              <div style={{ width: `${h.percentual}%`, background: corDesempenho(h.percentual) }} />
             </div>
           </div>
         ))}
@@ -85,7 +101,7 @@ export default function ResultadoPage() {
                 Questão {i + 1} · {NOME_DISCIPLINA[q.disciplina] || q.disciplina} · {q.habilidade}
               </span>
               <span className={`badge-acerto ${q.acerto ? "certo" : "errado"}`}>
-                {q.acerto ? "Acertou" : "Errou"}
+                {q.acerto ? "✓ Acertou" : "✗ Errou"}
               </span>
             </div>
             <p>{q.enunciado}</p>
@@ -106,7 +122,7 @@ export default function ResultadoPage() {
                   >
                     {letra.toUpperCase()}) {texto}
                     {ehGabarito && " ✓ gabarito"}
-                    {ehMarcada && !ehGabarito && " — sua resposta"}
+                    {ehMarcada && !ehGabarito && " ✗ sua resposta"}
                   </div>
                 );
               })}

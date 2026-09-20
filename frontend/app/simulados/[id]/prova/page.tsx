@@ -35,8 +35,16 @@ export default function ProvaPage() {
   const [confirmando, setConfirmando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erroCarregamento, setErroCarregamento] = useState<string | null>(null);
+  const [respostaSalva, setRespostaSalva] = useState(false);
 
   const enviandoRef = useRef(false);
+  const avisoSalvoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function avisarSalvo() {
+    setRespostaSalva(true);
+    if (avisoSalvoRef.current) clearTimeout(avisoSalvoRef.current);
+    avisoSalvoRef.current = setTimeout(() => setRespostaSalva(false), 1500);
+  }
 
   const finalizar = useCallback(async () => {
     if (!token || !tentativaId || enviandoRef.current) return;
@@ -79,6 +87,10 @@ export default function ProvaPage() {
   }, [params.id, router]);
 
   useEffect(() => {
+    setRespostaSalva(false);
+  }, [indice]);
+
+  useEffect(() => {
     if (tempoRestante === null) return;
     if (tempoRestante <= 0) {
       finalizar();
@@ -95,7 +107,9 @@ export default function ProvaPage() {
       const anterior = atual[questaoId];
       const novaResposta = { alternativa: letra, revisao: anterior?.revisao || false };
       if (token && tentativaId) {
-        responder(token, tentativaId, questaoId, letra, novaResposta.revisao).catch(() => {});
+        responder(token, tentativaId, questaoId, letra, novaResposta.revisao)
+          .then(avisarSalvo)
+          .catch(() => {});
       }
       return { ...atual, [questaoId]: novaResposta };
     });
@@ -112,7 +126,9 @@ export default function ProvaPage() {
           questaoId,
           novaResposta.alternativa,
           novaResposta.revisao
-        ).catch(() => {});
+        )
+          .then(avisarSalvo)
+          .catch(() => {});
       }
       return { ...atual, [questaoId]: novaResposta };
     });
@@ -133,8 +149,12 @@ export default function ProvaPage() {
 
   if (!questoes.length || tempoRestante === null) {
     return (
-      <div className="tela-boas-vindas">
-        <p>Carregando prova...</p>
+      <div className="tela-boas-vindas" style={{ width: "100%" }}>
+        <div style={{ maxWidth: 440, width: "100%" }}>
+          <div className="skeleton" style={{ height: 48, marginBottom: 16 }} />
+          <div className="skeleton" style={{ height: 120, marginBottom: 16 }} />
+          <div className="skeleton" style={{ height: 60 }} />
+        </div>
       </div>
     );
   }
@@ -161,14 +181,34 @@ export default function ProvaPage() {
           if (r?.revisao) classe += " revisao";
           else if (r?.alternativa) classe += " respondida";
           return (
-            <button key={q.id} className={classe} onClick={() => setIndice(i)}>
+            <button
+              key={q.id}
+              className={classe}
+              onClick={() => setIndice(i)}
+              aria-label={`Ir para a questão ${i + 1}${r?.alternativa ? ", respondida" : ""}${r?.revisao ? ", marcada para revisão" : ""}`}
+            >
               {i + 1}
             </button>
           );
         })}
       </div>
 
+      <div className="legenda">
+        <span className="item">
+          <span className="amostra atual" /> questão atual
+        </span>
+        <span className="item">
+          <span className="amostra respondida" /> respondida
+        </span>
+        <span className="item">
+          <span className="amostra revisao" /> marcada para revisão
+        </span>
+      </div>
+
       <div className="corpo-questao">
+        <div className="contador-questao">
+          Questão {indice + 1} de {questoes.length}
+        </div>
         <p className="enunciado">{questaoAtual.enunciado}</p>
         <div className="alternativas">
           {Object.entries(questaoAtual.alternativas).map(([letra, texto]) => (
@@ -191,6 +231,10 @@ export default function ProvaPage() {
           />
           Marcar para revisar depois
         </label>
+
+        <div className="aviso-salvo" role="status" aria-live="polite">
+          {respostaSalva && <>✓ Resposta salva</>}
+        </div>
       </div>
 
       <div className="rodape-prova">

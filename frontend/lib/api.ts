@@ -49,6 +49,10 @@ export interface LoginResponse {
   aluno: Aluno;
 }
 
+export function listarTurmas() {
+  return request<string[]>("/api/auth/turmas");
+}
+
 export function login(rm: string, turma: string) {
   return request<LoginResponse>("/api/auth/login", {
     method: "POST",

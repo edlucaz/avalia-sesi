@@ -48,8 +48,22 @@ export default function ListaSimuladosPage() {
         <h1>Seus simulados</h1>
         <p className="subtitulo">Escolha um simulado disponível para começar.</p>
 
-        {simulados === null && <p>Carregando...</p>}
-        {simulados?.length === 0 && <p>Nenhum simulado disponível no momento.</p>}
+        {simulados === null && (
+          <div className="lista-simulados">
+            <div className="skeleton skeleton-cartao" />
+            <div className="skeleton skeleton-cartao" />
+          </div>
+        )}
+
+        {simulados?.length === 0 && (
+          <div className="estado-vazio">
+            <div className="icone">🗓️</div>
+            <p>
+              <strong>Nenhum simulado disponível agora.</strong>
+            </p>
+            <p>Assim que seu professor liberar um novo simulado, ele aparece aqui.</p>
+          </div>
+        )}
 
         <div className="lista-simulados">
           {simulados?.map((s) => (
