@@ -10,11 +10,14 @@ import {
   responder,
 } from "@/lib/api";
 import { lerSessao } from "@/lib/session";
+import { segmentosDaQuestao, useLeitorDeApoio } from "@/lib/leitor";
 
 interface RespostaLocal {
   alternativa: string | null;
   revisao: boolean;
 }
+
+const LEITOR_AUTO_KEY = "avalia-sesi:leitor-auto";
 
 function formatarTempo(segundos: number) {
   const min = Math.floor(segundos / 60);
@@ -36,9 +39,12 @@ export default function ProvaPage() {
   const [enviando, setEnviando] = useState(false);
   const [erroCarregamento, setErroCarregamento] = useState<string | null>(null);
   const [respostaSalva, setRespostaSalva] = useState(false);
+  const [leitorAuto, setLeitorAuto] = useState(false);
 
   const enviandoRef = useRef(false);
   const avisoSalvoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { suportado: leitorSuportado, estado: estadoLeitura, segmentoAtual, falar, pausar, retomar, parar } =
+    useLeitorDeApoio();
 
   function avisarSalvo() {
     setRespostaSalva(true);
@@ -87,8 +93,34 @@ export default function ProvaPage() {
   }, [params.id, router]);
 
   useEffect(() => {
+    setLeitorAuto(localStorage.getItem(LEITOR_AUTO_KEY) === "1");
+  }, []);
+
+  useEffect(() => {
     setRespostaSalva(false);
   }, [indice]);
+
+  useEffect(() => {
+    parar();
+    if (!leitorAuto) return;
+    const questao = questoes[indice];
+    if (!questao) return;
+    falar(segmentosDaQuestao(questao.enunciado, questao.alternativas));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indice, leitorAuto, questoes]);
+
+  useEffect(() => {
+    if (confirmando) parar();
+  }, [confirmando, parar]);
+
+  function alternarLeitorAuto() {
+    setLeitorAuto((atual) => {
+      const novo = !atual;
+      localStorage.setItem(LEITOR_AUTO_KEY, novo ? "1" : "0");
+      if (!novo) parar();
+      return novo;
+    });
+  }
 
   useEffect(() => {
     if (tempoRestante === null) return;
@@ -209,12 +241,55 @@ export default function ProvaPage() {
         <div className="contador-questao">
           Questão {indice + 1} de {questoes.length}
         </div>
-        <p className="enunciado">{questaoAtual.enunciado}</p>
+
+        {leitorSuportado && (
+          <div className="controle-leitor">
+            <button
+              type="button"
+              className={`botao-leitor-auto ${leitorAuto ? "ativo" : ""}`}
+              aria-pressed={leitorAuto}
+              onClick={alternarLeitorAuto}
+            >
+              🔊 Leitor automático: {leitorAuto ? "ligado" : "desligado"}
+            </button>
+
+            <div className="botoes-reproducao">
+              {estadoLeitura === "lendo" ? (
+                <button type="button" className="botao-reproducao" onClick={pausar}>
+                  ⏸ Pausar
+                </button>
+              ) : estadoLeitura === "pausado" ? (
+                <button type="button" className="botao-reproducao" onClick={retomar}>
+                  ▶ Continuar
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="botao-reproducao"
+                  onClick={() =>
+                    falar(segmentosDaQuestao(questaoAtual.enunciado, questaoAtual.alternativas))
+                  }
+                >
+                  ▶ Ouvir questão
+                </button>
+              )}
+              {estadoLeitura !== "parado" && (
+                <button type="button" className="botao-reproducao secundario" onClick={parar}>
+                  ⏹ Parar
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        <p className={`enunciado ${segmentoAtual === "enunciado" ? "lendo" : ""}`}>
+          {questaoAtual.enunciado}
+        </p>
         <div className="alternativas">
           {Object.entries(questaoAtual.alternativas).map(([letra, texto]) => (
             <button
               key={letra}
-              className={`alternativa ${respostaAtual?.alternativa === letra ? "selecionada" : ""}`}
+              className={`alternativa ${respostaAtual?.alternativa === letra ? "selecionada" : ""} ${segmentoAtual === letra ? "lendo" : ""}`}
               onClick={() => marcarAlternativa(questaoAtual.id, letra)}
             >
               <span className="letra">{letra.toUpperCase()}</span>

@@ -49,6 +49,10 @@ export default function InstrucoesSimuladoPage() {
           <li>Uma questão aparece por vez na tela.</li>
           <li>Você pode marcar uma questão para revisar depois.</li>
           <li>Ao terminar, confirme o envio — depois disso não dá para mudar as respostas.</li>
+          <li>
+            Precisa de apoio de leitura? Toque em <strong>🔊 Leitor automático</strong> durante a
+            prova para ouvir cada questão em voz alta.
+          </li>
         </ul>
 
         <button

@@ -631,3 +631,63 @@ a:focus-visible {
   background: #f1f1f1;
   color: #778;
 }
+
+/* --- Leitor de apoio (leitura em voz alta das questões) --- */
+.controle-leitor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--fundo-secao);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.botao-leitor-auto {
+  background: white;
+  border: 2px solid var(--borda);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.botao-leitor-auto.ativo {
+  border-color: var(--sesi-azul-marinho);
+  color: var(--sesi-azul-marinho);
+}
+
+.botoes-reproducao {
+  display: flex;
+  gap: 8px;
+}
+
+.botao-reproducao {
+  border: 2px solid var(--sesi-azul-marinho);
+  background: var(--sesi-azul-marinho);
+  color: white;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.botao-reproducao.secundario {
+  background: white;
+  color: var(--sesi-azul-marinho);
+}
+
+.enunciado.lendo {
+  outline: 3px solid var(--sesi-amarelo);
+  outline-offset: 6px;
+  border-radius: 6px;
+}
+
+.alternativa.lendo {
+  outline: 3px solid var(--sesi-amarelo);
+  outline-offset: 2px;
+}
