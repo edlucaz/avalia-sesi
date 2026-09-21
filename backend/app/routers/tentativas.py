@@ -79,12 +79,12 @@ def iniciar_simulado(
     tentativa = (
         db.query(Tentativa)
         .filter(Tentativa.aluno_id == aluno.id, Tentativa.simulado_id == simulado_id)
+        .order_by(Tentativa.id.desc())
         .first()
     )
-    if tentativa and tentativa.status == StatusTentativa.ENVIADO:
-        raise HTTPException(status_code=409, detail="Simulado já enviado")
-
-    if not tentativa:
+    # Por enquanto, permite refazer o simulado: se a tentativa mais recente já
+    # foi enviada, começa uma tentativa nova em vez de bloquear.
+    if not tentativa or tentativa.status == StatusTentativa.ENVIADO:
         tentativa = Tentativa(aluno_id=aluno.id, simulado_id=simulado_id)
         db.add(tentativa)
         db.commit()

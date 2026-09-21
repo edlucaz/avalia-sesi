@@ -77,20 +77,42 @@ export default function ListaSimuladosPage() {
                       {NOME_DISCIPLINA[d] || d}
                     </span>
                   ))}
-                  {s.ja_respondido && <span className="tag tag-concluido">Concluído</span>}
+                  {s.ultima_tentativa_id !== null && (
+                    <span className="tag tag-concluido">
+                      Concluído{s.ultima_nota !== null ? ` · ${s.ultima_nota}%` : ""}
+                    </span>
+                  )}
                 </div>
                 <div className="meta" style={{ marginTop: 6 }}>
                   Tempo: {s.tempo_limite_min} min
                 </div>
               </div>
-              <button
-                className="botao-primario"
-                style={{ width: "auto", padding: "12px 22px" }}
-                disabled={s.ja_respondido}
-                onClick={() => router.push(`/simulados/${s.id}`)}
-              >
-                {s.ja_respondido ? "Feito" : "Começar"}
-              </button>
+              {s.ultima_tentativa_id !== null ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <button
+                    className="botao-primario"
+                    style={{ width: "auto", padding: "12px 22px" }}
+                    onClick={() => router.push(`/resultado/${s.ultima_tentativa_id}`)}
+                  >
+                    Ver resultado
+                  </button>
+                  <button
+                    className="botao-secundario"
+                    style={{ width: "auto", padding: "10px 22px" }}
+                    onClick={() => router.push(`/simulados/${s.id}`)}
+                  >
+                    Refazer
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="botao-primario"
+                  style={{ width: "auto", padding: "12px 22px" }}
+                  onClick={() => router.push(`/simulados/${s.id}`)}
+                >
+                  Começar
+                </button>
+              )}
             </div>
           ))}
         </div>

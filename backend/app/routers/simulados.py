@@ -26,15 +26,15 @@ def listar_simulados(
 
     resultado = []
     for simulado in simulados:
-        ja_respondido = (
+        ultima_tentativa = (
             db.query(Tentativa)
             .filter(
                 Tentativa.aluno_id == aluno.id,
                 Tentativa.simulado_id == simulado.id,
                 Tentativa.status == StatusTentativa.ENVIADO,
             )
+            .order_by(Tentativa.id.desc())
             .first()
-            is not None
         )
         resultado.append(
             SimuladoResumo(
@@ -45,7 +45,8 @@ def listar_simulados(
                 tempo_limite_min=simulado.tempo_limite_min,
                 janela_inicio=simulado.janela_inicio,
                 janela_fim=simulado.janela_fim,
-                ja_respondido=ja_respondido,
+                ultima_tentativa_id=ultima_tentativa.id if ultima_tentativa else None,
+                ultima_nota=ultima_tentativa.nota_geral if ultima_tentativa else None,
             )
         )
     return resultado

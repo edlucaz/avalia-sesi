@@ -31,12 +31,19 @@ def painel_simulado(simulado_id: int, turma: str, db: Session = Depends(get_db))
     if not turma_obj or turma_obj not in simulado.turmas_alvo:
         raise HTTPException(status_code=404, detail="Turma não participa deste simulado")
 
-    tentativas = (
+    tentativas_todas = (
         db.query(Tentativa)
         .join(Tentativa.aluno)
         .filter(Tentativa.simulado_id == simulado_id, Tentativa.aluno.has(turma_id=turma_obj.id))
+        .order_by(Tentativa.id.desc())
         .all()
     )
+    # Com refazer liberado, um aluno pode ter várias tentativas: considera só a
+    # mais recente de cada um para não contar/duplicar estatísticas.
+    ultima_por_aluno: dict[int, Tentativa] = {}
+    for t in tentativas_todas:
+        ultima_por_aluno.setdefault(t.aluno_id, t)
+    tentativas = list(ultima_por_aluno.values())
     concluidas = [t for t in tentativas if t.status == StatusTentativa.ENVIADO]
 
     alunos_painel = [

@@ -34,7 +34,8 @@ class SimuladoResumo(BaseModel):
     tempo_limite_min: int
     janela_inicio: datetime
     janela_fim: datetime
-    ja_respondido: bool
+    ultima_tentativa_id: Optional[int] = None
+    ultima_nota: Optional[float] = None
 
     class Config:
         from_attributes = True

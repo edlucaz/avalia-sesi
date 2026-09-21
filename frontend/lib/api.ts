@@ -68,7 +68,8 @@ export interface SimuladoResumo {
   tempo_limite_min: number;
   janela_inicio: string;
   janela_fim: string;
-  ja_respondido: boolean;
+  ultima_tentativa_id: number | null;
+  ultima_nota: number | null;
 }
 
 export function listarSimulados(token: string) {
