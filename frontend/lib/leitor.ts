@@ -23,9 +23,14 @@ export function useLeitorDeApoio() {
 
     function escolherVoz() {
       const vozes = window.speechSynthesis.getVoices();
+      const candidatasPtBr = vozes.filter((v) => v.lang === "pt-BR" || v.lang?.startsWith("pt"));
+      // Prioriza vozes online/neurais (Google, Microsoft Natural/Online) — soam bem
+      // menos robóticas que a voz padrão do sistema (geralmente espeak no Linux).
       vozRef.current =
-        vozes.find((v) => v.lang === "pt-BR") ||
-        vozes.find((v) => v.lang?.startsWith("pt")) ||
+        candidatasPtBr.find((v) => !v.localService && /google|natural|online|wavenet/i.test(v.name)) ||
+        candidatasPtBr.find((v) => !v.localService) ||
+        candidatasPtBr.find((v) => v.lang === "pt-BR") ||
+        candidatasPtBr[0] ||
         null;
     }
     escolherVoz();
@@ -48,7 +53,10 @@ export function useLeitorDeApoio() {
     segmentos.forEach((segmento, i) => {
       const utterance = new SpeechSynthesisUtterance(segmento.texto);
       utterance.lang = "pt-BR";
-      utterance.rate = 0.95;
+      // Mais devagar e com leve variação de tom ajuda a soar menos robótico,
+      // sobretudo nas vozes locais (espeak) que sobram quando não há voz online.
+      utterance.rate = 0.85;
+      utterance.pitch = 1.05;
       if (vozRef.current) utterance.voice = vozRef.current;
       utterance.onstart = () => {
         setEstado("lendo");

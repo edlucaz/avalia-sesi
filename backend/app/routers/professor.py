@@ -1,11 +1,19 @@
 import os
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Questao, Resposta, Simulado, StatusTentativa, Tentativa, Turma
-from app.schemas import AlunoPainel, DesempenhoHabilidade, PainelSimulado
+from app.models import ModoSorteio, Questao, Resposta, Simulado, StatusTentativa, Tentativa, Turma
+from app.schemas import (
+    AlunoPainel,
+    DesempenhoHabilidade,
+    PainelSimulado,
+    SimuladoCriarRequest,
+    SimuladoCriado,
+    TurmaOut,
+)
 
 router = APIRouter(prefix="/api/professor", tags=["professor"])
 
@@ -15,6 +23,73 @@ PROFESSOR_TOKEN = os.getenv("PROFESSOR_TOKEN", "dev-professor")
 def professor_autorizado(x_professor_token: str | None = Header(default=None)):
     if x_professor_token != PROFESSOR_TOKEN:
         raise HTTPException(status_code=401, detail="Acesso de professor não autorizado")
+
+
+@router.get("/turmas", response_model=list[TurmaOut], dependencies=[Depends(professor_autorizado)])
+def listar_turmas(db: Session = Depends(get_db)):
+    return db.query(Turma).order_by(Turma.nome).all()
+
+
+@router.get(
+    "/simulados", response_model=list[SimuladoCriado], dependencies=[Depends(professor_autorizado)]
+)
+def listar_simulados(db: Session = Depends(get_db)):
+    simulados = db.query(Simulado).order_by(Simulado.id.desc()).all()
+    return [
+        SimuladoCriado(
+            id=s.id,
+            titulo=s.titulo,
+            turmas=[t.nome for t in s.turmas_alvo],
+            janela_inicio=s.janela_inicio,
+            janela_fim=s.janela_fim,
+            modo_sorteio=s.modo_sorteio.value,
+            qtd_matematica=s.qtd_matematica,
+            qtd_portugues=s.qtd_portugues,
+        )
+        for s in simulados
+    ]
+
+
+@router.post(
+    "/simulados", response_model=SimuladoCriado, dependencies=[Depends(professor_autorizado)]
+)
+def criar_simulado(payload: SimuladoCriarRequest, db: Session = Depends(get_db)):
+    turmas = db.query(Turma).filter(Turma.nome.in_([t.upper() for t in payload.turmas])).all()
+    if not turmas:
+        raise HTTPException(status_code=400, detail="Nenhuma turma válida informada")
+
+    try:
+        modo = ModoSorteio(payload.modo_sorteio)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="modo_sorteio inválido")
+
+    agora = datetime.utcnow()
+    simulado = Simulado(
+        titulo=payload.titulo,
+        etapa=payload.etapa,
+        trimestre=payload.trimestre,
+        tempo_limite_min=payload.tempo_limite_min,
+        janela_inicio=agora,
+        janela_fim=agora + timedelta(days=payload.dias_disponivel),
+        modo_sorteio=modo,
+        qtd_matematica=payload.qtd_matematica,
+        qtd_portugues=payload.qtd_portugues,
+    )
+    simulado.turmas_alvo = turmas
+    db.add(simulado)
+    db.commit()
+    db.refresh(simulado)
+
+    return SimuladoCriado(
+        id=simulado.id,
+        titulo=simulado.titulo,
+        turmas=[t.nome for t in simulado.turmas_alvo],
+        janela_inicio=simulado.janela_inicio,
+        janela_fim=simulado.janela_fim,
+        modo_sorteio=simulado.modo_sorteio.value,
+        qtd_matematica=simulado.qtd_matematica,
+        qtd_portugues=simulado.qtd_portugues,
+    )
 
 
 @router.get(

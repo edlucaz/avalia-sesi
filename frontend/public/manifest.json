@@ -1,0 +1,17 @@
+{
+  "name": "Avalia SESI — Simulados",
+  "short_name": "Avalia SESI",
+  "description": "Plataforma de simulados do Avalia SESI (CE 303) — Escola SESI Araras.",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#EFE9DA",
+  "theme_color": "#e30513",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

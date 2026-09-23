@@ -169,6 +169,24 @@ class TentativaQuestao(Base):
     questao = relationship("Questao")
 
 
+class PraticaRegistro(Base):
+    """Uma questão respondida no modo treino (avulsa, fora de qualquer simulado
+    cronometrado). Não gera nota — serve de controle/base para um futuro ranking
+    de quem mais praticou."""
+
+    __tablename__ = "pratica_registros"
+
+    id = Column(Integer, primary_key=True)
+    aluno_id = Column(Integer, ForeignKey("alunos.id"), nullable=False)
+    questao_id = Column(Integer, ForeignKey("questoes.id"), nullable=False)
+    alternativa_marcada = Column(String, nullable=True)
+    acerto = Column(Boolean, nullable=False)
+    criado_em = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    aluno = relationship("Aluno")
+    questao = relationship("Questao")
+
+
 class Resposta(Base):
     __tablename__ = "respostas"
 

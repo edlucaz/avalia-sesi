@@ -49,6 +49,14 @@ export default function ListaSimuladosPage() {
         <h1>Seus simulados</h1>
         <p className="subtitulo">Escolha um simulado disponível para começar.</p>
 
+        <button
+          className="botao-secundario"
+          style={{ width: "auto", padding: "10px 20px", marginBottom: 20 }}
+          onClick={() => router.push("/treino")}
+        >
+          🎯 Modo treino — praticar uma questão por vez
+        </button>
+
         {simulados === null && (
           <div className="lista-simulados">
             <div className="skeleton skeleton-cartao" />

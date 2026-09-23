@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { login, listarTurmas, ApiError } from "@/lib/api";
 import { salvarSessao } from "@/lib/session";
 import Marca from "@/components/Marca";
+import BotaoInstalarApp from "@/components/BotaoInstalarApp";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -89,6 +90,8 @@ export default function LoginPage() {
         <p style={{ fontSize: 13, color: "#778", textAlign: "center", marginTop: 18, marginBottom: 0 }}>
           Não sabe seu RM ou sua turma? Peça ajuda ao seu professor.
         </p>
+
+        <BotaoInstalarApp />
       </div>
     </div>
   );

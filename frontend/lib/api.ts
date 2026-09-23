@@ -201,3 +201,83 @@ export function buscarPainelProfessor(
     { headers: { "X-Professor-Token": professorToken } }
   );
 }
+
+// --- Modo treino ---
+export interface QuestaoTreino {
+  questao_id: number;
+  disciplina: string;
+  enunciado: string;
+  alternativas: Record<string, string>;
+  tem_imagem?: boolean;
+}
+
+export interface ResultadoTreino {
+  questao_id: number;
+  gabarito: string;
+  alternativa_marcada: string;
+  acerto: boolean;
+  descritor?: string | null;
+  comentario_pedagogico?: string | null;
+}
+
+export function proximaQuestaoTreino(token: string, disciplina?: string) {
+  const qs = disciplina ? `?disciplina=${encodeURIComponent(disciplina)}` : "";
+  return request<QuestaoTreino>(`/api/pratica/proxima${qs}`, { token });
+}
+
+export function responderTreino(token: string, questaoId: number, alternativaMarcada: string) {
+  return request<ResultadoTreino>("/api/pratica/responder", {
+    method: "POST",
+    token,
+    body: JSON.stringify({ questao_id: questaoId, alternativa_marcada: alternativaMarcada }),
+  });
+}
+
+// --- Professor: criar/listar simulados ---
+export interface TurmaOut {
+  nome: string;
+  etapa: number;
+}
+
+export interface SimuladoCriado {
+  id: number;
+  titulo: string;
+  turmas: string[];
+  janela_inicio: string;
+  janela_fim: string;
+  modo_sorteio: string;
+  qtd_matematica: number | null;
+  qtd_portugues: number | null;
+}
+
+export interface SimuladoCriarRequest {
+  titulo: string;
+  etapa: number;
+  trimestre?: number;
+  tempo_limite_min?: number;
+  dias_disponivel?: number;
+  turmas: string[];
+  qtd_matematica?: number;
+  qtd_portugues?: number;
+  modo_sorteio?: string;
+}
+
+export function listarTurmasProfessor(professorToken: string) {
+  return request<TurmaOut[]>("/api/professor/turmas", {
+    headers: { "X-Professor-Token": professorToken },
+  });
+}
+
+export function listarSimuladosProfessor(professorToken: string) {
+  return request<SimuladoCriado[]>("/api/professor/simulados", {
+    headers: { "X-Professor-Token": professorToken },
+  });
+}
+
+export function criarSimuladoProfessor(professorToken: string, payload: SimuladoCriarRequest) {
+  return request<SimuladoCriado>("/api/professor/simulados", {
+    method: "POST",
+    headers: { "X-Professor-Token": professorToken },
+    body: JSON.stringify(payload),
+  });
+}

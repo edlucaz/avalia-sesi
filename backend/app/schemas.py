@@ -102,6 +102,29 @@ class ResultadoTentativa(BaseModel):
     questoes: list[QuestaoComentada]
 
 
+# --- Modo treino (prática avulsa) ---
+class QuestaoTreino(BaseModel):
+    questao_id: int
+    disciplina: str
+    enunciado: str
+    alternativas: dict[str, str]
+    tem_imagem: bool = False
+
+
+class ResponderTreinoRequest(BaseModel):
+    questao_id: int
+    alternativa_marcada: str
+
+
+class ResultadoTreino(BaseModel):
+    questao_id: int
+    gabarito: str
+    alternativa_marcada: str
+    acerto: bool
+    descritor: Optional[str] = None
+    comentario_pedagogico: Optional[str] = None
+
+
 # --- Painel do professor ---
 class AlunoPainel(BaseModel):
     aluno: str
@@ -120,3 +143,34 @@ class PainelSimulado(BaseModel):
     meta_institucional: Optional[float]
     ranking_habilidades_mais_erradas: list[DesempenhoHabilidade]
     alunos: list[AlunoPainel]
+
+
+class TurmaOut(BaseModel):
+    nome: str
+    etapa: int
+
+    class Config:
+        from_attributes = True
+
+
+class SimuladoCriarRequest(BaseModel):
+    titulo: str
+    etapa: int
+    trimestre: int = 1
+    tempo_limite_min: int = 30
+    dias_disponivel: int = 30
+    turmas: list[str]
+    qtd_matematica: int = 5
+    qtd_portugues: int = 5
+    modo_sorteio: str = "por_aluno"  # "por_aluno" | "turma_fixa"
+
+
+class SimuladoCriado(BaseModel):
+    id: int
+    titulo: str
+    turmas: list[str]
+    janela_inicio: datetime
+    janela_fim: datetime
+    modo_sorteio: str
+    qtd_matematica: Optional[int]
+    qtd_portugues: Optional[int]
