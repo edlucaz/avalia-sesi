@@ -1,5 +1,12 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// As imagens das questões exigem login (mesmo material oficial do Avalia+ SESI-SP,
+// sem redistribuição autorizada) — por isso vão por querystring, já que uma tag
+// <img> não consegue mandar um header Authorization.
+export function urlImagemQuestao(questaoId: number, token: string): string {
+  return `${API_URL}/api/questoes/${questaoId}/imagem?token=${encodeURIComponent(token)}`;
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -82,6 +89,7 @@ export interface QuestaoProva {
   disciplina: string;
   enunciado: string;
   alternativas: Record<string, string>;
+  tem_imagem?: boolean;
 }
 
 export interface TentativaIniciada {
@@ -130,11 +138,14 @@ export interface QuestaoComentada {
   questao_id: number;
   disciplina: string;
   habilidade: string;
+  descritor?: string | null;
   enunciado: string;
   alternativas: Record<string, string>;
   gabarito: string;
   alternativa_marcada: string | null;
   acerto: boolean;
+  tem_imagem?: boolean;
+  comentario_pedagogico?: string | null;
 }
 
 export interface DesempenhoHabilidade {

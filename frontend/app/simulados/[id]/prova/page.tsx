@@ -8,6 +8,7 @@ import {
   enviarTentativa,
   iniciarSimulado,
   responder,
+  urlImagemQuestao,
 } from "@/lib/api";
 import { lerSessao } from "@/lib/session";
 import { segmentosDaQuestao, useLeitorDeApoio } from "@/lib/leitor";
@@ -285,6 +286,14 @@ export default function ProvaPage() {
         <p className={`enunciado ${segmentoAtual === "enunciado" ? "lendo" : ""}`}>
           {questaoAtual.enunciado}
         </p>
+        {questaoAtual.tem_imagem && token && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={urlImagemQuestao(questaoAtual.id, token)}
+            alt="Apoio visual da questão"
+            className="imagem-questao"
+          />
+        )}
         <div className="alternativas">
           {Object.entries(questaoAtual.alternativas).map(([letra, texto]) => (
             <button

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ApiError, ResultadoTentativa, buscarResultado } from "@/lib/api";
+import { ApiError, ResultadoTentativa, buscarResultado, urlImagemQuestao } from "@/lib/api";
 import { corDesempenho } from "@/lib/desempenho";
 import { lerSessao } from "@/lib/session";
 import Marca from "@/components/Marca";
@@ -23,6 +23,7 @@ export default function ResultadoPage() {
   const params = useParams<{ tentativaId: string }>();
   const [resultado, setResultado] = useState<ResultadoTentativa | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     const sessao = lerSessao();
@@ -30,6 +31,7 @@ export default function ResultadoPage() {
       router.replace("/login");
       return;
     }
+    setToken(sessao.token);
     buscarResultado(sessao.token, Number(params.tentativaId))
       .then(setResultado)
       .catch((err) =>
@@ -99,13 +101,22 @@ export default function ResultadoPage() {
           <div className="questao-comentada" key={q.questao_id}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               <span className="tag">
-                Questão {i + 1} · {NOME_DISCIPLINA[q.disciplina] || q.disciplina} · {q.habilidade}
+                Questão {i + 1} · {NOME_DISCIPLINA[q.disciplina] || q.disciplina}
+                {q.descritor ? ` · ${q.descritor}` : ` · ${q.habilidade}`}
               </span>
               <span className={`badge-acerto ${q.acerto ? "certo" : "errado"}`}>
                 {q.acerto ? "✓ Acertou" : "✗ Errou"}
               </span>
             </div>
             <p>{q.enunciado}</p>
+            {q.tem_imagem && token && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={urlImagemQuestao(q.questao_id, token)}
+                alt="Apoio visual da questão"
+                className="imagem-questao"
+              />
+            )}
             <div style={{ fontSize: 14 }}>
               {Object.entries(q.alternativas).map(([letra, texto]) => {
                 const ehGabarito = letra === q.gabarito;
@@ -131,6 +142,12 @@ export default function ResultadoPage() {
                 <div style={{ color: "#667", fontStyle: "italic" }}>Você não respondeu esta questão.</div>
               )}
             </div>
+            {q.comentario_pedagogico && (
+              <details className="comentario-pedagogico">
+                <summary>Ver explicação</summary>
+                <p>{q.comentario_pedagogico}</p>
+              </details>
+            )}
           </div>
         ))}
 

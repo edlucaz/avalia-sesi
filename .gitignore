@@ -16,3 +16,6 @@ frontend/*.tsbuildinfo
 # geral
 .DS_Store
 *.log
+
+# material oficial de origem (não redistribuir — "documentos avalia/" reprodução não autorizada)
+documentos avalia/

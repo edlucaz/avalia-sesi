@@ -28,6 +28,16 @@ class StatusTentativa(str, enum.Enum):
     ENVIADO = "enviado"
 
 
+class TipoItem(str, enum.Enum):
+    ETAPA = "etapa"
+    CONEXAO = "conexao"
+
+
+class ModoSorteio(str, enum.Enum):
+    POR_ALUNO = "por_aluno"  # cada tentativa sorteia seu próprio conjunto de questões
+    TURMA_FIXA = "turma_fixa"  # sorteio único, compartilhado por todas as tentativas do simulado
+
+
 simulado_turma = Table(
     "simulado_turma",
     Base.metadata,
@@ -64,12 +74,18 @@ class Questao(Base):
 
     id = Column(Integer, primary_key=True)
     disciplina = Column(Enum(Disciplina), nullable=False)
-    habilidade = Column(String, nullable=False)  # ex: "EF05LP03"
+    etapa = Column(Integer, nullable=False, default=5)  # ano do fundamental a que a questão pertence
+    habilidade = Column(String, nullable=False)  # ex: "EF05LP03" ou código oficial "EF.05.MAT.1.83"
+    descritor = Column(String, nullable=True)  # descrição textual da habilidade (Avalia+ SESI-SP)
+    tipo_item = Column(Enum(TipoItem), nullable=False, default=TipoItem.ETAPA)
     ano_origem = Column(Integer, nullable=True)  # ano da prova de origem
     enunciado = Column(String, nullable=False)
     alternativas = Column(JSON, nullable=False)  # {"a": "...", "b": "...", "c": "...", "d": "..."}
     gabarito = Column(String, nullable=False)  # "a" | "b" | "c" | "d"
     dificuldade = Column(String, nullable=False, default="media")  # facil | media | dificil
+    imagem_url = Column(String, nullable=True)  # recorte fiel do item original, quando aplicável
+    comentario_pedagogico = Column(String, nullable=True)  # explicação exibida após a correção
+    fonte = Column(String, nullable=True)  # ex: "Avalia+ SESI-SP — 1ª Aplicação 2026"
 
 
 class SimuladoQuestao(Base):
@@ -93,6 +109,10 @@ class Simulado(Base):
     tempo_limite_min = Column(Integer, nullable=False, default=60)
     janela_inicio = Column(DateTime, nullable=False)
     janela_fim = Column(DateTime, nullable=False)
+    modo_sorteio = Column(Enum(ModoSorteio), nullable=False, default=ModoSorteio.POR_ALUNO)
+    # usado apenas quando o simulado sorteia questões de um banco (em vez de lista fixa):
+    qtd_matematica = Column(Integer, nullable=True)
+    qtd_portugues = Column(Integer, nullable=True)
 
     turmas_alvo = relationship("Turma", secondary=simulado_turma, back_populates="simulados")
     questoes = relationship(
@@ -101,7 +121,17 @@ class Simulado(Base):
     tentativas = relationship("Tentativa", back_populates="simulado")
 
     def disciplinas(self):
+        if self.modo_sorteio == ModoSorteio.POR_ALUNO:
+            disc = []
+            if self.qtd_matematica:
+                disc.append(Disciplina.MATEMATICA.value)
+            if self.qtd_portugues:
+                disc.append(Disciplina.PORTUGUES.value)
+            return sorted(disc)
         return sorted({sq.questao.disciplina.value for sq in self.questoes})
+
+    def sorteia_por_aluno(self) -> bool:
+        return self.modo_sorteio == ModoSorteio.POR_ALUNO
 
 
 class Tentativa(Base):
@@ -118,6 +148,25 @@ class Tentativa(Base):
     aluno = relationship("Aluno", back_populates="tentativas")
     simulado = relationship("Simulado", back_populates="tentativas")
     respostas = relationship("Resposta", back_populates="tentativa", cascade="all, delete-orphan")
+    questoes_sorteadas = relationship(
+        "TentativaQuestao", order_by="TentativaQuestao.ordem", cascade="all, delete-orphan"
+    )
+
+    def questoes_da_prova(self) -> list["Questao"]:
+        if self.simulado.sorteia_por_aluno():
+            return [tq.questao for tq in self.questoes_sorteadas]
+        return [sq.questao for sq in self.simulado.questoes]
+
+
+class TentativaQuestao(Base):
+    __tablename__ = "tentativa_questoes"
+
+    id = Column(Integer, primary_key=True)
+    tentativa_id = Column(Integer, ForeignKey("tentativas.id"), nullable=False)
+    questao_id = Column(Integer, ForeignKey("questoes.id"), nullable=False)
+    ordem = Column(Integer, nullable=False, default=0)
+
+    questao = relationship("Questao")
 
 
 class Resposta(Base):

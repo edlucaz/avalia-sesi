@@ -341,6 +341,33 @@ a:focus-visible {
   gap: 14px;
 }
 
+.imagem-questao {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.comentario-pedagogico {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.comentario-pedagogico summary {
+  cursor: pointer;
+  color: var(--azul, #074a71);
+  font-weight: 600;
+}
+
+.comentario-pedagogico p {
+  margin-top: 8px;
+  line-height: 1.5;
+  color: var(--texto-secundario, #445);
+  white-space: pre-line;
+}
+
 .alternativa {
   display: flex;
   align-items: center;

@@ -48,6 +48,7 @@ class QuestaoProva(BaseModel):
     disciplina: str
     enunciado: str
     alternativas: dict[str, str]
+    tem_imagem: bool = False
 
 
 class TentativaIniciada(BaseModel):
@@ -73,11 +74,14 @@ class QuestaoComentada(BaseModel):
     questao_id: int
     disciplina: str
     habilidade: str
+    descritor: Optional[str] = None
     enunciado: str
     alternativas: dict[str, str]
     gabarito: str
     alternativa_marcada: Optional[str]
     acerto: bool
+    tem_imagem: bool = False
+    comentario_pedagogico: Optional[str] = None
 
 
 class DesempenhoHabilidade(BaseModel):

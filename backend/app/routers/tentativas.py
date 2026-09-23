@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,10 +8,15 @@ from app.auth import aluno_atual
 from app.database import get_db
 from app.models import (
     Aluno,
+    Disciplina,
+    ModoSorteio,
+    Questao,
     Resposta,
     Simulado,
+    SimuladoQuestao,
     StatusTentativa,
     Tentativa,
+    TentativaQuestao,
 )
 from app.schemas import (
     DesempenhoHabilidade,
@@ -32,13 +38,53 @@ def _tentativa_do_aluno(tentativa_id: int, aluno: Aluno, db: Session) -> Tentati
     return tentativa
 
 
+def _sortear_questoes(simulado: Simulado, db: Session) -> list[Questao]:
+    banco_mt = (
+        db.query(Questao)
+        .filter(Questao.etapa == simulado.etapa, Questao.disciplina == Disciplina.MATEMATICA)
+        .all()
+    )
+    banco_lp = (
+        db.query(Questao)
+        .filter(Questao.etapa == simulado.etapa, Questao.disciplina == Disciplina.PORTUGUES)
+        .all()
+    )
+    escolhidas = random.sample(banco_mt, min(simulado.qtd_matematica or 0, len(banco_mt)))
+    escolhidas += random.sample(banco_lp, min(simulado.qtd_portugues or 0, len(banco_lp)))
+    random.shuffle(escolhidas)
+    return escolhidas
+
+
+def _garantir_questoes_turma_fixa(simulado: Simulado, db: Session):
+    """No modo turma_fixa, o sorteio acontece uma única vez (na primeira tentativa
+    de qualquer aluno) e fica salvo no próprio simulado, compartilhado por todos."""
+    if simulado.questoes:
+        return
+    escolhidas = _sortear_questoes(simulado, db)
+    for ordem, questao in enumerate(escolhidas, start=1):
+        db.add(SimuladoQuestao(simulado_id=simulado.id, questao_id=questao.id, ordem=ordem))
+    db.commit()
+    db.refresh(simulado)
+
+
+def _gerar_questoes_por_aluno(tentativa: Tentativa, db: Session):
+    """No modo por_aluno, cada tentativa nova recebe seu próprio sorteio, fixo
+    a partir daí (para a correção e o resultado usarem sempre o mesmo conjunto)."""
+    escolhidas = _sortear_questoes(tentativa.simulado, db)
+    for ordem, questao in enumerate(escolhidas, start=1):
+        db.add(TentativaQuestao(tentativa_id=tentativa.id, questao_id=questao.id, ordem=ordem))
+    db.commit()
+    db.refresh(tentativa)
+
+
 def _corrigir(tentativa: Tentativa, db: Session) -> float:
     respostas = {r.questao_id: r for r in tentativa.respostas}
-    total = len(tentativa.simulado.questoes)
+    questoes = tentativa.questoes_da_prova()
+    total = len(questoes)
     acertos = 0
-    for sq in tentativa.simulado.questoes:
-        resposta = respostas.get(sq.questao_id)
-        acerto = bool(resposta and resposta.alternativa_marcada == sq.questao.gabarito)
+    for questao in questoes:
+        resposta = respostas.get(questao.id)
+        acerto = bool(resposta and resposta.alternativa_marcada == questao.gabarito)
         if resposta:
             resposta.acerto = acerto
         if acerto:
@@ -84,11 +130,18 @@ def iniciar_simulado(
     )
     # Por enquanto, permite refazer o simulado: se a tentativa mais recente já
     # foi enviada, começa uma tentativa nova em vez de bloquear.
-    if not tentativa or tentativa.status == StatusTentativa.ENVIADO:
+    nova_tentativa = not tentativa or tentativa.status == StatusTentativa.ENVIADO
+    if nova_tentativa:
         tentativa = Tentativa(aluno_id=aluno.id, simulado_id=simulado_id)
         db.add(tentativa)
         db.commit()
         db.refresh(tentativa)
+
+    if simulado.sorteia_por_aluno():
+        if nova_tentativa:
+            _gerar_questoes_por_aluno(tentativa, db)
+    else:
+        _garantir_questoes_turma_fixa(simulado, db)
 
     _expirar_se_necessario(tentativa, db)
     if tentativa.status == StatusTentativa.ENVIADO:
@@ -96,13 +149,14 @@ def iniciar_simulado(
 
     questoes = [
         QuestaoProva(
-            id=sq.questao.id,
-            ordem=sq.ordem,
-            disciplina=sq.questao.disciplina.value,
-            enunciado=sq.questao.enunciado,
-            alternativas=sq.questao.alternativas,
+            id=questao.id,
+            ordem=ordem,
+            disciplina=questao.disciplina.value,
+            enunciado=questao.enunciado,
+            alternativas=questao.alternativas,
+            tem_imagem=bool(questao.imagem_url),
         )
-        for sq in tentativa.simulado.questoes
+        for ordem, questao in enumerate(tentativa.questoes_da_prova(), start=1)
     ]
 
     return TentativaIniciada(
@@ -168,8 +222,7 @@ def resultado(
     questoes: list[QuestaoComentada] = []
     por_habilidade: dict[tuple[str, str], list[int]] = {}
 
-    for sq in tentativa.simulado.questoes:
-        questao = sq.questao
+    for questao in tentativa.questoes_da_prova():
         resposta = respostas.get(questao.id)
         acerto = bool(resposta and resposta.acerto)
         questoes.append(
@@ -177,11 +230,14 @@ def resultado(
                 questao_id=questao.id,
                 disciplina=questao.disciplina.value,
                 habilidade=questao.habilidade,
+                descritor=questao.descritor,
                 enunciado=questao.enunciado,
                 alternativas=questao.alternativas,
                 gabarito=questao.gabarito,
                 alternativa_marcada=resposta.alternativa_marcada if resposta else None,
                 acerto=acerto,
+                tem_imagem=bool(questao.imagem_url),
+                comentario_pedagogico=questao.comentario_pedagogico,
             )
         )
         chave = (questao.habilidade, questao.disciplina.value)
