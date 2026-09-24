@@ -19,3 +19,9 @@ frontend/*.tsbuildinfo
 
 # material oficial de origem (não redistribuir — "documentos avalia/" reprodução não autorizada)
 documentos avalia/
+
+# listas de alunos (dados pessoais de crianças — LGPD): importar para o banco, nunca versionar
+backend/dados_alunos/
+*.xls
+*.xlsx
+*.csv
