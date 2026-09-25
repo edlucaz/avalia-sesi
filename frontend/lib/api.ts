@@ -77,6 +77,7 @@ export interface SimuladoResumo {
   janela_fim: string;
   ultima_tentativa_id: number | null;
   ultima_nota: number | null;
+  resultado_disponivel: boolean;
 }
 
 export function listarSimulados(token: string) {
@@ -128,7 +129,7 @@ export function responder(
 }
 
 export function enviarTentativa(token: string, tentativaId: number) {
-  return request<{ tentativa_id: number; nota_geral: number }>(
+  return request<{ tentativa_id: number; nota_geral: number | null; resultado_disponivel: boolean }>(
     `/api/tentativas/${tentativaId}/enviar`,
     { method: "POST", token }
   );
@@ -420,7 +421,13 @@ export interface SimuladoCriado {
   qtd_matematica: number | null;
   qtd_portugues: number | null;
   tempo_limite_min: number;
+  turmas_liberacao: TurmaLiberacao[];
+}
+
+export interface TurmaLiberacao {
+  turma: string;
   liberado: boolean;
+  mostrar_resultado: boolean;
 }
 
 export interface SimuladoCriarRequest {
@@ -433,6 +440,7 @@ export interface SimuladoCriarRequest {
   qtd_matematica?: number;
   qtd_portugues?: number;
   modo_sorteio?: string;
+  mostrar_resultado?: boolean;
 }
 
 export function listarTurmasProfessor(token: string) {
@@ -451,10 +459,29 @@ export function criarSimuladoProfessor(token: string, payload: SimuladoCriarRequ
   });
 }
 
-export function liberarSimuladoProfessor(token: string, simuladoId: number) {
+export function liberarSimuladoProfessor(
+  token: string,
+  simuladoId: number,
+  turma: string,
+  mostrarResultado: boolean
+) {
   return request<SimuladoCriado>(`/api/professor/simulados/${simuladoId}/liberar`, {
     method: "POST",
     token,
+    body: JSON.stringify({ turma, mostrar_resultado: mostrarResultado }),
+  });
+}
+
+export function alterarResultadoProfessor(
+  token: string,
+  simuladoId: number,
+  turma: string,
+  mostrarResultado: boolean
+) {
+  return request<SimuladoCriado>(`/api/professor/simulados/${simuladoId}/resultado`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({ turma, mostrar_resultado: mostrarResultado }),
   });
 }
 

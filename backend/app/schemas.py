@@ -36,6 +36,7 @@ class SimuladoResumo(BaseModel):
     janela_fim: datetime
     ultima_tentativa_id: Optional[int] = None
     ultima_nota: Optional[float] = None
+    resultado_disponivel: bool = True
 
     class Config:
         from_attributes = True
@@ -66,7 +67,8 @@ class ResponderRequest(BaseModel):
 
 class EnviarTentativaResponse(BaseModel):
     tentativa_id: int
-    nota_geral: float
+    nota_geral: Optional[float]  # None quando o professor não liberou o resultado
+    resultado_disponivel: bool = True
 
 
 # --- Resultado ---
@@ -278,6 +280,23 @@ class SimuladoCriarRequest(BaseModel):
     qtd_matematica: int = 5
     qtd_portugues: int = 5
     modo_sorteio: str = "turma_fixa"  # "por_aluno" | "turma_fixa"
+    mostrar_resultado: bool = True
+
+
+class LiberarSimuladoRequest(BaseModel):
+    turma: str
+    mostrar_resultado: bool = True
+
+
+class AlterarResultadoRequest(BaseModel):
+    turma: str
+    mostrar_resultado: bool
+
+
+class TurmaLiberacao(BaseModel):
+    turma: str
+    liberado: bool
+    mostrar_resultado: bool
 
 
 class SimuladoCriado(BaseModel):
@@ -290,4 +309,4 @@ class SimuladoCriado(BaseModel):
     qtd_matematica: Optional[int]
     qtd_portugues: Optional[int]
     tempo_limite_min: int
-    liberado: bool
+    turmas_liberacao: list[TurmaLiberacao]

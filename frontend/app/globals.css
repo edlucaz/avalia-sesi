@@ -708,6 +708,57 @@ a:focus-visible {
   color: #778;
 }
 
+/* --- Liberação de simulado por turma (painel do professor) --- */
+.liberacao-turma {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  padding: 4px 0;
+}
+
+.liberacao-turma + .liberacao-turma {
+  border-top: 1px dashed var(--borda);
+}
+
+.botao-link {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  color: var(--sesi-azul-marinho);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.botao-link:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.opcao-checkbox {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--fundo-secao);
+  font-size: 14px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.opcao-checkbox input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--sesi-azul-marinho);
+}
+
 /* --- Leitor de apoio (leitura em voz alta das questões) --- */
 .controle-leitor {
   display: flex;

@@ -87,7 +87,12 @@ export default function ListaSimuladosPage() {
                   ))}
                   {s.ultima_tentativa_id !== null && (
                     <span className="tag tag-concluido">
-                      Concluído{s.ultima_nota !== null ? ` · ${s.ultima_nota}%` : ""}
+                      Concluído
+                      {s.resultado_disponivel
+                        ? s.ultima_nota !== null
+                          ? ` · ${s.ultima_nota}%`
+                          : ""
+                        : " · resultado em breve"}
                     </span>
                   )}
                 </div>
@@ -97,13 +102,15 @@ export default function ListaSimuladosPage() {
               </div>
               {s.ultima_tentativa_id !== null ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <button
-                    className="botao-primario"
-                    style={{ width: "auto", padding: "12px 22px" }}
-                    onClick={() => router.push(`/resultado/${s.ultima_tentativa_id}`)}
-                  >
-                    Ver resultado
-                  </button>
+                  {s.resultado_disponivel && (
+                    <button
+                      className="botao-primario"
+                      style={{ width: "auto", padding: "12px 22px" }}
+                      onClick={() => router.push(`/resultado/${s.ultima_tentativa_id}`)}
+                    >
+                      Ver resultado
+                    </button>
+                  )}
                   <button
                     className="botao-secundario"
                     style={{ width: "auto", padding: "10px 22px" }}

@@ -23,6 +23,7 @@ export default function ResultadoPage() {
   const params = useParams<{ tentativaId: string }>();
   const [resultado, setResultado] = useState<ResultadoTentativa | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [aguardandoProfessor, setAguardandoProfessor] = useState(false);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,10 +35,33 @@ export default function ResultadoPage() {
     setToken(sessao.token);
     buscarResultado(sessao.token, Number(params.tentativaId))
       .then(setResultado)
-      .catch((err) =>
-        setErro(err instanceof ApiError ? err.message : "Não foi possível carregar o resultado.")
-      );
+      .catch((err) => {
+        // 403 = o professor escolheu não mostrar o resultado (ainda).
+        if (err instanceof ApiError && err.status === 403) {
+          setAguardandoProfessor(true);
+          return;
+        }
+        setErro(err instanceof ApiError ? err.message : "Não foi possível carregar o resultado.");
+      });
   }, [params.tentativaId, router]);
+
+  if (aguardandoProfessor) {
+    return (
+      <div className="tela-boas-vindas">
+        <div className="cartao" style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 48 }}>✅</div>
+          <h1>Prova enviada!</h1>
+          <p className="subtitulo">
+            Suas respostas foram salvas. O resultado vai aparecer aqui quando seu professor
+            liberar.
+          </p>
+          <button className="botao-primario" onClick={() => router.push("/simulados")}>
+            Voltar aos simulados
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (erro) {
     return (

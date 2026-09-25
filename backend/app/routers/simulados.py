@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.auth import aluno_atual
 from app.database import get_db
-from app.models import Aluno, Simulado, StatusTentativa, Tentativa
+from app.liberacao import vinculo_turma
+from app.models import Aluno, Simulado, StatusTentativa, Tentativa, simulado_turma
 from app.schemas import SimuladoResumo
 
 router = APIRouter(prefix="/api/simulados", tags=["simulados"])
@@ -19,14 +20,15 @@ def listar_simulados(
     agora = datetime.utcnow()
     simulados = (
         db.query(Simulado)
-        .filter(Simulado.turmas_alvo.any(id=aluno.turma_id))
-        .filter(Simulado.liberado.is_(True))
+        .join(simulado_turma, simulado_turma.c.simulado_id == Simulado.id)
+        .filter(simulado_turma.c.turma_id == aluno.turma_id, simulado_turma.c.liberado.is_(True))
         .filter(Simulado.janela_inicio <= agora, Simulado.janela_fim >= agora)
         .all()
     )
 
     resultado = []
     for simulado in simulados:
+        mostrar_resultado = vinculo_turma(db, simulado.id, aluno.turma_id).mostrar_resultado
         ultima_tentativa = (
             db.query(Tentativa)
             .filter(
@@ -47,7 +49,10 @@ def listar_simulados(
                 janela_inicio=simulado.janela_inicio,
                 janela_fim=simulado.janela_fim,
                 ultima_tentativa_id=ultima_tentativa.id if ultima_tentativa else None,
-                ultima_nota=ultima_tentativa.nota_geral if ultima_tentativa else None,
+                ultima_nota=(
+                    ultima_tentativa.nota_geral if ultima_tentativa and mostrar_resultado else None
+                ),
+                resultado_disponivel=mostrar_resultado,
             )
         )
     return resultado

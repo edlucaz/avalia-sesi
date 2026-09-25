@@ -14,6 +14,7 @@ import {
   criarSimuladoProfessor,
   formatarDataBrasilia,
   liberarSimuladoProfessor,
+  alterarResultadoProfessor,
   listarSimuladosProfessor,
   listarSolicitacoes,
   listarTurmasProfessor,
@@ -59,7 +60,11 @@ export default function PainelProfessorPage() {
   const [criando, setCriando] = useState(false);
   const [erroCriar, setErroCriar] = useState<string | null>(null);
   const [sucessoCriar, setSucessoCriar] = useState<SimuladoCriado | null>(null);
-  const [liberandoId, setLiberandoId] = useState<number | null>(null);
+  const [mostrarResultadoNovo, setMostrarResultadoNovo] = useState(true);
+  // Simulado + turma sendo liberados (abre a janela de confirmação).
+  const [liberacao, setLiberacao] = useState<{ simulado: SimuladoCriado; turma: string } | null>(null);
+  const [mostrarResultadoLiberar, setMostrarResultadoLiberar] = useState(true);
+  const [acaoEmAndamento, setAcaoEmAndamento] = useState<string | null>(null);
   const [erroLiberar, setErroLiberar] = useState<string | null>(null);
 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoAcesso[] | null>(null);
@@ -137,21 +142,40 @@ export default function PainelProfessorPage() {
     );
   }
 
-  async function liberar(s: SimuladoCriado) {
-    const periodo = `${formatarDataBrasilia(s.janela_inicio)} a ${formatarDataBrasilia(s.janela_fim)}`;
-    if (!window.confirm(`Liberar "${s.titulo}" para ${s.turmas.join(", ")}?\nOs alunos poderão fazer de ${periodo}.`)) {
-      return;
-    }
-    if (!token) return;
+  function atualizarNaLista(atualizado: SimuladoCriado) {
+    setSimuladosExistentes((lista) => lista?.map((x) => (x.id === atualizado.id ? atualizado : x)) ?? null);
+  }
+
+  function abrirLiberacao(simulado: SimuladoCriado, turma: string) {
     setErroLiberar(null);
-    setLiberandoId(s.id);
+    setMostrarResultadoLiberar(true);
+    setLiberacao({ simulado, turma });
+  }
+
+  async function confirmarLiberacao() {
+    if (!token || !liberacao) return;
+    const { simulado, turma } = liberacao;
+    setAcaoEmAndamento(`${simulado.id}-${turma}`);
     try {
-      const atualizado = await liberarSimuladoProfessor(token, s.id);
-      setSimuladosExistentes((lista) => lista?.map((x) => (x.id === s.id ? atualizado : x)) ?? null);
+      atualizarNaLista(await liberarSimuladoProfessor(token, simulado.id, turma, mostrarResultadoLiberar));
+      setLiberacao(null);
     } catch (err) {
       setErroLiberar(err instanceof ApiError ? err.message : "Não foi possível liberar o simulado.");
     } finally {
-      setLiberandoId(null);
+      setAcaoEmAndamento(null);
+    }
+  }
+
+  async function alternarResultado(simulado: SimuladoCriado, turma: string, mostrar: boolean) {
+    if (!token) return;
+    setErroLiberar(null);
+    setAcaoEmAndamento(`${simulado.id}-${turma}`);
+    try {
+      atualizarNaLista(await alterarResultadoProfessor(token, simulado.id, turma, mostrar));
+    } catch (err) {
+      setErroLiberar(err instanceof ApiError ? err.message : "Não foi possível alterar o resultado.");
+    } finally {
+      setAcaoEmAndamento(null);
     }
   }
 
@@ -175,6 +199,7 @@ export default function PainelProfessorPage() {
         tempo_limite_min: Number(tempoLimiteNovo),
         dias_disponivel: Number(diasDisponivel),
         modo_sorteio: modoSorteioNovo,
+        mostrar_resultado: mostrarResultadoNovo,
       });
       setSucessoCriar(criado);
       setSimuladosExistentes(await listarSimuladosProfessor(token));
@@ -321,6 +346,19 @@ export default function PainelProfessorPage() {
               </select>
             </div>
 
+            <label className="opcao-checkbox">
+              <input
+                type="checkbox"
+                checked={mostrarResultadoNovo}
+                onChange={(e) => setMostrarResultadoNovo(e.target.checked)}
+              />
+              <span>
+                <strong>Alunos veem o resultado ao terminar</strong>
+                <br />
+                Nota, gabarito e comentários logo após enviar. Dá para mudar depois na tabela.
+              </span>
+            </label>
+
             <button
               className="botao-primario"
               style={{ width: "auto", padding: "12px 24px", marginTop: 16 }}
@@ -335,18 +373,18 @@ export default function PainelProfessorPage() {
           <>
             <h2>Simulados</h2>
             <p className="subtitulo">
-              Simulados agendados só aparecem para os alunos depois de liberados, e apenas dentro do período.
+              Cada turma é liberada separadamente, no dia em que for aplicar. O simulado só aparece para os
+              alunos depois de liberado, e apenas dentro do período.
             </p>
-            {erroLiberar && <div className="erro">{erroLiberar}</div>}
+            {erroLiberar && !liberacao && <div className="erro">{erroLiberar}</div>}
             <table className="tabela-alunos" style={{ marginBottom: 32 }}>
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Título</th>
-                  <th>Turmas</th>
                   <th>Questões</th>
                   <th>Período</th>
-                  <th>Status</th>
+                  <th>Liberação por turma</th>
                 </tr>
               </thead>
               <tbody>
@@ -354,7 +392,6 @@ export default function PainelProfessorPage() {
                   <tr key={s.id}>
                     <td>{s.id}</td>
                     <td>{s.titulo}</td>
-                    <td>{s.turmas.join(", ")}</td>
                     <td>
                       {(s.qtd_matematica ?? 0) + (s.qtd_portugues ?? 0)} ({s.qtd_matematica ?? 0} MT +{" "}
                       {s.qtd_portugues ?? 0} LP) · {s.tempo_limite_min} min
@@ -363,19 +400,44 @@ export default function PainelProfessorPage() {
                       {formatarDataBrasilia(s.janela_inicio)} a {formatarDataBrasilia(s.janela_fim)}
                     </td>
                     <td>
-                      {s.liberado ? (
-                        <span className="status-pill enviado">Liberado</span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="botao-primario"
-                          style={{ width: "auto", padding: "6px 14px", fontSize: 14 }}
-                          disabled={liberandoId === s.id}
-                          onClick={() => liberar(s)}
-                        >
-                          {liberandoId === s.id ? "Liberando..." : "Liberar"}
-                        </button>
-                      )}
+                      {s.turmas_liberacao.map((t) => {
+                        const pode = turmasDisponiveis.some((d) => d.nome === t.turma);
+                        const ocupado = acaoEmAndamento === `${s.id}-${t.turma}`;
+                        return (
+                          <div className="liberacao-turma" key={t.turma}>
+                            <strong>{t.turma}</strong>
+                            {t.liberado ? (
+                              <>
+                                <span className="status-pill enviado">Liberado</span>
+                                <span className={`status-pill ${t.mostrar_resultado ? "enviado" : "nao-fez"}`}>
+                                  {t.mostrar_resultado ? "Resultado visível" : "Resultado oculto"}
+                                </span>
+                                {pode && (
+                                  <button
+                                    type="button"
+                                    className="botao-link"
+                                    disabled={ocupado}
+                                    onClick={() => alternarResultado(s, t.turma, !t.mostrar_resultado)}
+                                  >
+                                    {ocupado ? "Salvando..." : t.mostrar_resultado ? "Ocultar resultado" : "Mostrar resultado"}
+                                  </button>
+                                )}
+                              </>
+                            ) : pode ? (
+                              <button
+                                type="button"
+                                className="botao-primario"
+                                style={{ width: "auto", padding: "6px 14px", fontSize: 14 }}
+                                onClick={() => abrirLiberacao(s, t.turma)}
+                              >
+                                Liberar
+                              </button>
+                            ) : (
+                              <span className="status-pill nao-fez">Aguardando</span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </td>
                   </tr>
                 ))}
@@ -501,6 +563,52 @@ export default function PainelProfessorPage() {
           </>
         )}
       </div>
+
+      {liberacao && (
+        <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-liberacao">
+          <div className="cartao">
+            <h1 id="titulo-liberacao">Liberar para o {liberacao.turma}?</h1>
+            <p className="subtitulo">
+              <strong>{liberacao.simulado.titulo}</strong>
+              <br />
+              Os alunos do {liberacao.turma} poderão fazer de{" "}
+              {formatarDataBrasilia(liberacao.simulado.janela_inicio)} a{" "}
+              {formatarDataBrasilia(liberacao.simulado.janela_fim)}, com{" "}
+              {liberacao.simulado.tempo_limite_min} minutos de prova.
+            </p>
+            <label className="opcao-checkbox">
+              <input
+                type="checkbox"
+                checked={mostrarResultadoLiberar}
+                onChange={(e) => setMostrarResultadoLiberar(e.target.checked)}
+              />
+              <span>
+                <strong>Alunos veem o resultado ao terminar</strong>
+                <br />
+                {mostrarResultadoLiberar
+                  ? "Nota, gabarito e comentários aparecem logo após enviar."
+                  : "Eles verão só \"Prova enviada\". Você pode mostrar o resultado depois, pela tabela."}
+              </span>
+            </label>
+            {erroLiberar && <div className="erro">{erroLiberar}</div>}
+            <button
+              className="botao-primario"
+              onClick={confirmarLiberacao}
+              disabled={acaoEmAndamento !== null}
+            >
+              {acaoEmAndamento !== null ? "Liberando..." : `Liberar para o ${liberacao.turma}`}
+            </button>
+            <div style={{ height: 10 }} />
+            <button
+              className="botao-secundario"
+              onClick={() => setLiberacao(null)}
+              disabled={acaoEmAndamento !== null}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

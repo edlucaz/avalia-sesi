@@ -56,6 +56,10 @@ simulado_turma = Table(
     Base.metadata,
     Column("simulado_id", ForeignKey("simulados.id"), primary_key=True),
     Column("turma_id", ForeignKey("turmas.id"), primary_key=True),
+    # Liberação é por turma: cada turma aplica no seu dia dentro da janela, e o
+    # professor decide se os alunos veem a nota/correção logo ao terminar.
+    Column("liberado", Boolean, nullable=False, default=True, server_default=true()),
+    Column("mostrar_resultado", Boolean, nullable=False, default=True, server_default=true()),
 )
 
 funcionario_turma = Table(
@@ -156,10 +160,6 @@ class Simulado(Base):
     # usado apenas quando o simulado sorteia questões de um banco (em vez de lista fixa):
     qtd_matematica = Column(Integer, nullable=True)
     qtd_portugues = Column(Integer, nullable=True)
-    # Simulados agendados nascem bloqueados: só aparecem para os alunos depois que
-    # o professor libera (e ainda dentro da janela de aplicação).
-    liberado = Column(Boolean, nullable=False, default=True, server_default=true())
-
     turmas_alvo = relationship("Turma", secondary=simulado_turma, back_populates="simulados")
     questoes = relationship(
         "SimuladoQuestao", order_by=SimuladoQuestao.ordem, cascade="all, delete-orphan"

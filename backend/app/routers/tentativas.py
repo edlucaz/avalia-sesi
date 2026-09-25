@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import aluno_atual
 from app.database import get_db
+from app.liberacao import vinculo_turma
 from app.models import (
     Aluno,
     Disciplina,
@@ -115,6 +116,11 @@ def _expirar_se_necessario(tentativa: Tentativa, db: Session):
         _corrigir(tentativa, db)
 
 
+def _resultado_liberado(tentativa: Tentativa, aluno: Aluno, db: Session) -> bool:
+    vinculo = vinculo_turma(db, tentativa.simulado_id, aluno.turma_id)
+    return bool(vinculo and vinculo.mostrar_resultado)
+
+
 @router.post("/api/simulados/{simulado_id}/iniciar", response_model=TentativaIniciada)
 def iniciar_simulado(
     simulado_id: int,
@@ -122,9 +128,10 @@ def iniciar_simulado(
     db: Session = Depends(get_db),
 ):
     simulado = db.query(Simulado).filter(Simulado.id == simulado_id).first()
-    if not simulado or aluno.turma not in simulado.turmas_alvo:
+    vinculo = vinculo_turma(db, simulado_id, aluno.turma_id) if simulado else None
+    if not vinculo:
         raise HTTPException(status_code=404, detail="Simulado não encontrado")
-    if not simulado.liberado:
+    if not vinculo.liberado:
         raise HTTPException(status_code=403, detail="Simulado ainda não foi liberado pelo professor")
 
     agora = datetime.utcnow()
@@ -214,6 +221,10 @@ def enviar(
         nota = _corrigir(tentativa, db)
     else:
         nota = tentativa.nota_geral or 0.0
+    if not _resultado_liberado(tentativa, aluno, db):
+        return EnviarTentativaResponse(
+            tentativa_id=tentativa.id, nota_geral=None, resultado_disponivel=False
+        )
     return EnviarTentativaResponse(tentativa_id=tentativa.id, nota_geral=nota)
 
 
@@ -226,6 +237,10 @@ def resultado(
     tentativa = _tentativa_do_aluno(tentativa_id, aluno, db)
     if tentativa.status != StatusTentativa.ENVIADO:
         raise HTTPException(status_code=409, detail="Tentativa ainda não foi enviada")
+    if not _resultado_liberado(tentativa, aluno, db):
+        raise HTTPException(
+            status_code=403, detail="O professor ainda não liberou o resultado deste simulado"
+        )
 
     respostas = {r.questao_id: r for r in tentativa.respostas}
     questoes: list[QuestaoComentada] = []

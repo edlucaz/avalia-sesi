@@ -5,14 +5,18 @@ from sqlalchemy.orm import Session
 
 from app.auth_staff import funcionario_atual
 from app.database import get_db
+from app.liberacao import atualizar_vinculo, vinculos_do_simulado
 from app.routers.tentativas import _garantir_questoes_turma_fixa
 from app.models import Funcionario, ModoSorteio, Questao, Resposta, Simulado, StatusTentativa, Tentativa, Turma
 from app.schemas import (
+    AlterarResultadoRequest,
     AlunoPainel,
     DesempenhoHabilidade,
+    LiberarSimuladoRequest,
     PainelSimulado,
     SimuladoCriarRequest,
     SimuladoCriado,
+    TurmaLiberacao,
     TurmaOut,
 )
 
@@ -33,18 +37,25 @@ def listar_turmas(
     return turmas_visiveis(funcionario, db)
 
 
-def _simulado_out(s: Simulado) -> SimuladoCriado:
+def _simulado_out(s: Simulado, db: Session) -> SimuladoCriado:
+    vinculos = vinculos_do_simulado(db, s.id)
+    turmas = sorted(s.turmas_alvo, key=lambda t: t.nome)
     return SimuladoCriado(
         id=s.id,
         titulo=s.titulo,
-        turmas=[t.nome for t in s.turmas_alvo],
+        turmas=[t.nome for t in turmas],
         janela_inicio=s.janela_inicio,
         janela_fim=s.janela_fim,
         modo_sorteio=s.modo_sorteio.value,
         qtd_matematica=s.qtd_matematica,
         qtd_portugues=s.qtd_portugues,
         tempo_limite_min=s.tempo_limite_min,
-        liberado=s.liberado,
+        turmas_liberacao=[
+            TurmaLiberacao(
+                turma=t.nome, liberado=vinculos[t.id][0], mostrar_resultado=vinculos[t.id][1]
+            )
+            for t in turmas
+        ],
     )
 
 
@@ -54,26 +65,54 @@ def listar_simulados(
     db: Session = Depends(get_db),
 ):
     simulados = db.query(Simulado).order_by(Simulado.janela_inicio, Simulado.id).all()
-    return [_simulado_out(s) for s in simulados]
+    return [_simulado_out(s, db) for s in simulados]
+
+
+def _simulado_e_turma_do_professor(
+    simulado_id: int, nome_turma: str, funcionario: Funcionario, db: Session
+) -> tuple[Simulado, Turma]:
+    simulado = db.query(Simulado).filter(Simulado.id == simulado_id).first()
+    if not simulado:
+        raise HTTPException(status_code=404, detail="Simulado não encontrado")
+    turma = next((t for t in simulado.turmas_alvo if t.nome == nome_turma.upper()), None)
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não participa deste simulado")
+    if turma not in turmas_visiveis(funcionario, db):
+        raise HTTPException(status_code=403, detail="Você não tem acesso a esta turma")
+    return simulado, turma
 
 
 @router.post("/simulados/{simulado_id}/liberar", response_model=SimuladoCriado)
 def liberar_simulado(
     simulado_id: int,
+    payload: LiberarSimuladoRequest,
     funcionario: Funcionario = Depends(funcionario_atual),
     db: Session = Depends(get_db),
 ):
-    simulado = db.query(Simulado).filter(Simulado.id == simulado_id).first()
-    if not simulado:
-        raise HTTPException(status_code=404, detail="Simulado não encontrado")
-    if not set(simulado.turmas_alvo) & set(turmas_visiveis(funcionario, db)):
-        raise HTTPException(status_code=403, detail="Você não tem acesso às turmas deste simulado")
-    simulado.liberado = True
+    simulado, turma = _simulado_e_turma_do_professor(simulado_id, payload.turma, funcionario, db)
+    atualizar_vinculo(
+        db, simulado.id, [turma.id], liberado=True, mostrar_resultado=payload.mostrar_resultado
+    )
     db.commit()
     # Sorteia já na liberação: a turma inteira começa com o conjunto pronto.
     if not simulado.sorteia_por_aluno():
         _garantir_questoes_turma_fixa(simulado, db)
-    return _simulado_out(simulado)
+    return _simulado_out(simulado, db)
+
+
+@router.post("/simulados/{simulado_id}/resultado", response_model=SimuladoCriado)
+def alterar_resultado(
+    simulado_id: int,
+    payload: AlterarResultadoRequest,
+    funcionario: Funcionario = Depends(funcionario_atual),
+    db: Session = Depends(get_db),
+):
+    """Mostra/esconde a nota e a correção para os alunos da turma — por exemplo,
+    esconder durante a semana de aplicação e mostrar quando todos terminarem."""
+    simulado, turma = _simulado_e_turma_do_professor(simulado_id, payload.turma, funcionario, db)
+    atualizar_vinculo(db, simulado.id, [turma.id], mostrar_resultado=payload.mostrar_resultado)
+    db.commit()
+    return _simulado_out(simulado, db)
 
 
 @router.post("/simulados", response_model=SimuladoCriado)
@@ -106,8 +145,12 @@ def criar_simulado(
     simulado.turmas_alvo = turmas
     db.add(simulado)
     db.commit()
+    atualizar_vinculo(
+        db, simulado.id, [t.id for t in turmas], mostrar_resultado=payload.mostrar_resultado
+    )
+    db.commit()
     db.refresh(simulado)
-    return _simulado_out(simulado)
+    return _simulado_out(simulado, db)
 
 
 @router.get("/simulados/{simulado_id}/painel", response_model=PainelSimulado)
