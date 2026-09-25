@@ -123,6 +123,38 @@ class ResultadoTreino(BaseModel):
     acerto: bool
     descritor: Optional[str] = None
     comentario_pedagogico: Optional[str] = None
+    pontos_ganhos: int = 0
+    sequencia_atual: int = 0
+    pontos_totais: int = 0
+    faixa_atual: str = "Bronze"
+    novos_selos: list[str] = []
+
+
+class MeuProgressoTreino(BaseModel):
+    pontos_totais: int
+    faixa_atual: str
+    proxima_faixa: Optional[str]
+    pontos_para_proxima: Optional[int]
+    sequencia_atual: int
+    melhor_sequencia: int
+    total_respondidas: int
+    total_acertos: int
+    selos: list[str]
+
+
+class RankingTreinoItem(BaseModel):
+    posicao: int
+    aluno: str
+    turma: str
+    pontos: int
+    faixa: str
+
+
+class RankingTreino(BaseModel):
+    ranking_turma: list[RankingTreinoItem]
+    posicao_turma: Optional[int]
+    ranking_escola: list[RankingTreinoItem]
+    posicao_escola: Optional[int]
 
 
 # --- Acesso de professores/gestores (funcionários) ---

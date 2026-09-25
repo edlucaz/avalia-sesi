@@ -223,6 +223,8 @@ class PraticaRegistro(Base):
     questao_id = Column(Integer, ForeignKey("questoes.id"), nullable=False)
     alternativa_marcada = Column(String, nullable=True)
     acerto = Column(Boolean, nullable=False)
+    pontos = Column(Integer, nullable=False, default=0)  # 0 se errou; base + bônus de sequência se acertou
+    sequencia_no_momento = Column(Integer, nullable=False, default=0)  # acertos seguidos terminando aqui (0 se errou)
     criado_em = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     aluno = relationship("Aluno")

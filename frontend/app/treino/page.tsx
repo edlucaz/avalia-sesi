@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ApiError,
+  MeuProgressoTreino,
   QuestaoTreino,
   ResultadoTreino,
+  buscarMeuProgressoTreino,
   proximaQuestaoTreino,
   responderTreino,
   urlImagemQuestao,
@@ -32,6 +34,7 @@ export default function TreinoPage() {
   const [respondendo, setRespondendo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [placar, setPlacar] = useState({ acertos: 0, total: 0 });
+  const [progresso, setProgresso] = useState<MeuProgressoTreino | null>(null);
 
   const { suportado: leitorSuportado, estado: estadoLeitura, segmentoAtual, falar, pausar, retomar, parar } =
     useLeitorDeApoio();
@@ -61,6 +64,7 @@ export default function TreinoPage() {
     }
     setToken(sessao.token);
     carregarProxima(sessao.token, filtro);
+    buscarMeuProgressoTreino(sessao.token).then(setProgresso).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
@@ -78,6 +82,7 @@ export default function TreinoPage() {
       const res = await responderTreino(token, questao.questao_id, letra);
       setResultado(res);
       setPlacar((p) => ({ acertos: p.acertos + (res.acerto ? 1 : 0), total: p.total + 1 }));
+      setProgresso((p) => (p ? { ...p, pontos_totais: res.pontos_totais, faixa_atual: res.faixa_atual } : p));
     } catch (err) {
       setErro(err instanceof ApiError ? err.message : "Não foi possível registrar a resposta.");
     } finally {
@@ -94,9 +99,18 @@ export default function TreinoPage() {
       <header className="cabecalho">
         <Marca />
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span>
-            Acertos: {placar.acertos}/{placar.total}
-          </span>
+          {progresso && (
+            <span>
+              🏅 {progresso.faixa_atual} · {progresso.pontos_totais} pts · {placar.acertos}/{placar.total} nesta sessão
+            </span>
+          )}
+          <button
+            className="botao-secundario"
+            style={{ width: "auto", padding: "8px 16px" }}
+            onClick={() => router.push("/treino/ranking")}
+          >
+            🏆 Ranking
+          </button>
           <button
             className="botao-secundario"
             style={{ width: "auto", padding: "8px 16px" }}
@@ -209,7 +223,14 @@ export default function TreinoPage() {
               <div style={{ marginTop: 20 }}>
                 <div className={`badge-acerto ${resultado.acerto ? "certo" : "errado"}`}>
                   {resultado.acerto ? "✓ Acertou" : "✗ Errou"}
+                  {resultado.acerto && ` · +${resultado.pontos_ganhos} pontos`}
+                  {resultado.sequencia_atual >= 2 && ` · sequência de ${resultado.sequencia_atual}! 🔥`}
                 </div>
+                {resultado.novos_selos.length > 0 && (
+                  <div className="aviso-salvo" role="status" style={{ marginTop: 10 }}>
+                    🎉 Novo selo: {resultado.novos_selos.join(", ")}
+                  </div>
+                )}
                 {resultado.descritor && (
                   <p style={{ fontSize: 13, color: "#667", marginTop: 8 }}>{resultado.descritor}</p>
                 )}

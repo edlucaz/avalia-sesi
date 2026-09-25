@@ -349,6 +349,38 @@ export interface ResultadoTreino {
   acerto: boolean;
   descritor?: string | null;
   comentario_pedagogico?: string | null;
+  pontos_ganhos: number;
+  sequencia_atual: number;
+  pontos_totais: number;
+  faixa_atual: string;
+  novos_selos: string[];
+}
+
+export interface MeuProgressoTreino {
+  pontos_totais: number;
+  faixa_atual: string;
+  proxima_faixa: string | null;
+  pontos_para_proxima: number | null;
+  sequencia_atual: number;
+  melhor_sequencia: number;
+  total_respondidas: number;
+  total_acertos: number;
+  selos: string[];
+}
+
+export interface RankingTreinoItem {
+  posicao: number;
+  aluno: string;
+  turma: string;
+  pontos: number;
+  faixa: string;
+}
+
+export interface RankingTreino {
+  ranking_turma: RankingTreinoItem[];
+  posicao_turma: number | null;
+  ranking_escola: RankingTreinoItem[];
+  posicao_escola: number | null;
 }
 
 export function proximaQuestaoTreino(token: string, disciplina?: string) {
@@ -362,6 +394,14 @@ export function responderTreino(token: string, questaoId: number, alternativaMar
     token,
     body: JSON.stringify({ questao_id: questaoId, alternativa_marcada: alternativaMarcada }),
   });
+}
+
+export function buscarMeuProgressoTreino(token: string) {
+  return request<MeuProgressoTreino>("/api/pratica/meu-progresso", { token });
+}
+
+export function buscarRankingTreino(token: string) {
+  return request<RankingTreino>("/api/pratica/ranking", { token });
 }
 
 // --- Professor: criar/listar simulados ---
