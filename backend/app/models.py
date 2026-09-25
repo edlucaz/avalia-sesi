@@ -12,6 +12,7 @@ from sqlalchemy import (
     JSON,
     String,
     Table,
+    true,
 )
 from sqlalchemy.orm import relationship
 
@@ -155,6 +156,9 @@ class Simulado(Base):
     # usado apenas quando o simulado sorteia questões de um banco (em vez de lista fixa):
     qtd_matematica = Column(Integer, nullable=True)
     qtd_portugues = Column(Integer, nullable=True)
+    # Simulados agendados nascem bloqueados: só aparecem para os alunos depois que
+    # o professor libera (e ainda dentro da janela de aplicação).
+    liberado = Column(Boolean, nullable=False, default=True, server_default=true())
 
     turmas_alvo = relationship("Turma", secondary=simulado_turma, back_populates="simulados")
     questoes = relationship(

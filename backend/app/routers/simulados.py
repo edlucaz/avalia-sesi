@@ -20,6 +20,7 @@ def listar_simulados(
     simulados = (
         db.query(Simulado)
         .filter(Simulado.turmas_alvo.any(id=aluno.turma_id))
+        .filter(Simulado.liberado.is_(True))
         .filter(Simulado.janela_inicio <= agora, Simulado.janela_fim >= agora)
         .all()
     )

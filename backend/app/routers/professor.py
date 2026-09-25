@@ -32,25 +32,44 @@ def listar_turmas(
     return turmas_visiveis(funcionario, db)
 
 
+def _simulado_out(s: Simulado) -> SimuladoCriado:
+    return SimuladoCriado(
+        id=s.id,
+        titulo=s.titulo,
+        turmas=[t.nome for t in s.turmas_alvo],
+        janela_inicio=s.janela_inicio,
+        janela_fim=s.janela_fim,
+        modo_sorteio=s.modo_sorteio.value,
+        qtd_matematica=s.qtd_matematica,
+        qtd_portugues=s.qtd_portugues,
+        tempo_limite_min=s.tempo_limite_min,
+        liberado=s.liberado,
+    )
+
+
 @router.get("/simulados", response_model=list[SimuladoCriado])
 def listar_simulados(
     funcionario: Funcionario = Depends(funcionario_atual),
     db: Session = Depends(get_db),
 ):
-    simulados = db.query(Simulado).order_by(Simulado.id.desc()).all()
-    return [
-        SimuladoCriado(
-            id=s.id,
-            titulo=s.titulo,
-            turmas=[t.nome for t in s.turmas_alvo],
-            janela_inicio=s.janela_inicio,
-            janela_fim=s.janela_fim,
-            modo_sorteio=s.modo_sorteio.value,
-            qtd_matematica=s.qtd_matematica,
-            qtd_portugues=s.qtd_portugues,
-        )
-        for s in simulados
-    ]
+    simulados = db.query(Simulado).order_by(Simulado.janela_inicio, Simulado.id).all()
+    return [_simulado_out(s) for s in simulados]
+
+
+@router.post("/simulados/{simulado_id}/liberar", response_model=SimuladoCriado)
+def liberar_simulado(
+    simulado_id: int,
+    funcionario: Funcionario = Depends(funcionario_atual),
+    db: Session = Depends(get_db),
+):
+    simulado = db.query(Simulado).filter(Simulado.id == simulado_id).first()
+    if not simulado:
+        raise HTTPException(status_code=404, detail="Simulado não encontrado")
+    if not set(simulado.turmas_alvo) & set(turmas_visiveis(funcionario, db)):
+        raise HTTPException(status_code=403, detail="Você não tem acesso às turmas deste simulado")
+    simulado.liberado = True
+    db.commit()
+    return _simulado_out(simulado)
 
 
 @router.post("/simulados", response_model=SimuladoCriado)
@@ -84,17 +103,7 @@ def criar_simulado(
     db.add(simulado)
     db.commit()
     db.refresh(simulado)
-
-    return SimuladoCriado(
-        id=simulado.id,
-        titulo=simulado.titulo,
-        turmas=[t.nome for t in simulado.turmas_alvo],
-        janela_inicio=simulado.janela_inicio,
-        janela_fim=simulado.janela_fim,
-        modo_sorteio=simulado.modo_sorteio.value,
-        qtd_matematica=simulado.qtd_matematica,
-        qtd_portugues=simulado.qtd_portugues,
-    )
+    return _simulado_out(simulado)
 
 
 @router.get("/simulados/{simulado_id}/painel", response_model=PainelSimulado)

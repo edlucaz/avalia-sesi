@@ -6,7 +6,7 @@ Uso:
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from app.auth_staff import SENHA_PADRAO, hash_senha
@@ -148,6 +148,41 @@ simulado.turmas_alvo = [turmas["5A"], turmas["5B"]]
 db.add(simulado)
 db.commit()
 
+# Cronograma do Projeto Avalia (5º ano A). Datas no horário de Brasília (UTC-3);
+# o banco guarda em UTC. Nascem bloqueados até o professor liberar na data.
+BRASILIA = timezone(timedelta(hours=-3))
+CRONOGRAMA_5A = [
+    # (nº, questões, início, fim)
+    (1, 12, date(2026, 9, 28), date(2026, 10, 2)),
+    (2, 14, date(2026, 10, 5), date(2026, 10, 9)),
+    (3, 18, date(2026, 10, 19), date(2026, 10, 23)),
+    (4, 22, date(2026, 10, 26), date(2026, 10, 30)),
+    (5, 26, date(2026, 11, 3), date(2026, 11, 6)),
+    (6, 26, date(2026, 11, 9), date(2026, 11, 13)),
+]
+
+
+def _utc(dia: date, hora: time) -> datetime:
+    return datetime.combine(dia, hora, BRASILIA).astimezone(timezone.utc).replace(tzinfo=None)
+
+
+for numero, qtd, inicio, fim in CRONOGRAMA_5A:
+    agendado = Simulado(
+        titulo=f"{numero}º Simulado — Projeto Avalia ({qtd} questões)",
+        etapa=5,
+        trimestre=1,
+        tempo_limite_min=60,
+        janela_inicio=_utc(inicio, time(0, 0)),
+        janela_fim=_utc(fim, time(23, 59, 59)),
+        modo_sorteio=ModoSorteio.TURMA_FIXA,
+        qtd_matematica=qtd // 2,
+        qtd_portugues=qtd // 2,
+        liberado=False,
+    )
+    agendado.turmas_alvo = [turmas["5A"]]
+    db.add(agendado)
+db.commit()
+
 db.add_all(
     [
         MetaInstitucional(etapa=5, disciplina=Disciplina.PORTUGUES, trimestre=1, valor_alvo_pct=70.0),
@@ -161,6 +196,7 @@ print(f"  {len(turmas)} turmas, {len(alunos)} alunos")
 print(f"  {len(funcionarios)} funcionários (professores/gestão) — senha padrão: {SENHA_PADRAO}")
 print(f"  Banco de questões reais do 5º ano: {qtd_mt} de Matemática + {qtd_lp} de Português")
 print(f"  Simulado #{simulado.id}: '{simulado.titulo}' — mesmo sorteio (turma_fixa) pra 5A e 5B")
+print(f"  Cronograma do Projeto Avalia: {len(CRONOGRAMA_5A)} simulados para o 5A, aguardando liberação")
 print()
 print("Login de aluno de teste: RM 50001, turma 5A")
 print("Login de professor/gestão: um dos e-mails cadastrados + senha padrão (troca no primeiro acesso)")

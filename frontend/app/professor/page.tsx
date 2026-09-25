@@ -12,6 +12,8 @@ import {
   aprovarSolicitacao,
   buscarPainelProfessor,
   criarSimuladoProfessor,
+  formatarDataBrasilia,
+  liberarSimuladoProfessor,
   listarSimuladosProfessor,
   listarSolicitacoes,
   listarTurmasProfessor,
@@ -57,6 +59,8 @@ export default function PainelProfessorPage() {
   const [criando, setCriando] = useState(false);
   const [erroCriar, setErroCriar] = useState<string | null>(null);
   const [sucessoCriar, setSucessoCriar] = useState<SimuladoCriado | null>(null);
+  const [liberandoId, setLiberandoId] = useState<number | null>(null);
+  const [erroLiberar, setErroLiberar] = useState<string | null>(null);
 
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoAcesso[] | null>(null);
   const [processandoSolicitacao, setProcessandoSolicitacao] = useState<number | null>(null);
@@ -131,6 +135,24 @@ export default function PainelProfessorPage() {
     setTurmasSelecionadas((atual) =>
       atual.includes(nome) ? atual.filter((t) => t !== nome) : [...atual, nome]
     );
+  }
+
+  async function liberar(s: SimuladoCriado) {
+    const periodo = `${formatarDataBrasilia(s.janela_inicio)} a ${formatarDataBrasilia(s.janela_fim)}`;
+    if (!window.confirm(`Liberar "${s.titulo}" para ${s.turmas.join(", ")}?\nOs alunos poderão fazer de ${periodo}.`)) {
+      return;
+    }
+    if (!token) return;
+    setErroLiberar(null);
+    setLiberandoId(s.id);
+    try {
+      const atualizado = await liberarSimuladoProfessor(token, s.id);
+      setSimuladosExistentes((lista) => lista?.map((x) => (x.id === s.id ? atualizado : x)) ?? null);
+    } catch (err) {
+      setErroLiberar(err instanceof ApiError ? err.message : "Não foi possível liberar o simulado.");
+    } finally {
+      setLiberandoId(null);
+    }
   }
 
   async function criarSimulado(e: React.FormEvent) {
@@ -311,15 +333,20 @@ export default function PainelProfessorPage() {
 
         {simuladosExistentes && simuladosExistentes.length > 0 && (
           <>
-            <h2>Simulados já lançados</h2>
+            <h2>Simulados</h2>
+            <p className="subtitulo">
+              Simulados agendados só aparecem para os alunos depois de liberados, e apenas dentro do período.
+            </p>
+            {erroLiberar && <div className="erro">{erroLiberar}</div>}
             <table className="tabela-alunos" style={{ marginBottom: 32 }}>
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Título</th>
                   <th>Turmas</th>
-                  <th>Sorteio</th>
-                  <th>Disponível até</th>
+                  <th>Questões</th>
+                  <th>Período</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -328,8 +355,28 @@ export default function PainelProfessorPage() {
                     <td>{s.id}</td>
                     <td>{s.titulo}</td>
                     <td>{s.turmas.join(", ")}</td>
-                    <td>{s.modo_sorteio === "por_aluno" ? "Por aluno" : "Turma fixa"}</td>
-                    <td>{new Date(s.janela_fim).toLocaleDateString("pt-BR")}</td>
+                    <td>
+                      {(s.qtd_matematica ?? 0) + (s.qtd_portugues ?? 0)} ({s.qtd_matematica ?? 0} MT +{" "}
+                      {s.qtd_portugues ?? 0} LP) · {s.tempo_limite_min} min
+                    </td>
+                    <td>
+                      {formatarDataBrasilia(s.janela_inicio)} a {formatarDataBrasilia(s.janela_fim)}
+                    </td>
+                    <td>
+                      {s.liberado ? (
+                        <span className="status-pill enviado">Liberado</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="botao-primario"
+                          style={{ width: "auto", padding: "6px 14px", fontSize: 14 }}
+                          disabled={liberandoId === s.id}
+                          onClick={() => liberar(s)}
+                        >
+                          {liberandoId === s.id ? "Liberando..." : "Liberar"}
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

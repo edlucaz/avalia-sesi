@@ -289,3 +289,5 @@ class SimuladoCriado(BaseModel):
     modo_sorteio: str
     qtd_matematica: Optional[int]
     qtd_portugues: Optional[int]
+    tempo_limite_min: int
+    liberado: bool

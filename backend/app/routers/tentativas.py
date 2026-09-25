@@ -115,8 +115,10 @@ def iniciar_simulado(
     db: Session = Depends(get_db),
 ):
     simulado = db.query(Simulado).filter(Simulado.id == simulado_id).first()
-    if not simulado:
+    if not simulado or aluno.turma not in simulado.turmas_alvo:
         raise HTTPException(status_code=404, detail="Simulado não encontrado")
+    if not simulado.liberado:
+        raise HTTPException(status_code=403, detail="Simulado ainda não foi liberado pelo professor")
 
     agora = datetime.utcnow()
     if not (simulado.janela_inicio <= agora <= simulado.janela_fim):

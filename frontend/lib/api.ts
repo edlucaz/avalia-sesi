@@ -419,6 +419,8 @@ export interface SimuladoCriado {
   modo_sorteio: string;
   qtd_matematica: number | null;
   qtd_portugues: number | null;
+  tempo_limite_min: number;
+  liberado: boolean;
 }
 
 export interface SimuladoCriarRequest {
@@ -447,4 +449,18 @@ export function criarSimuladoProfessor(token: string, payload: SimuladoCriarRequ
     token,
     body: JSON.stringify(payload),
   });
+}
+
+export function liberarSimuladoProfessor(token: string, simuladoId: number) {
+  return request<SimuladoCriado>(`/api/professor/simulados/${simuladoId}/liberar`, {
+    method: "POST",
+    token,
+  });
+}
+
+// A API devolve datas em UTC sem fuso ("2026-10-03T02:59:59"); o navegador leria
+// como horário local, então marcamos como UTC e exibimos no horário de Brasília.
+export function formatarDataBrasilia(isoUtc: string) {
+  const data = new Date(/[zZ]|[+-]\d\d:\d\d$/.test(isoUtc) ? isoUtc : `${isoUtc}Z`);
+  return data.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
