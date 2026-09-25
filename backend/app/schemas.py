@@ -156,6 +156,13 @@ class SolicitarAcessoRequest(BaseModel):
     email: str
 
 
+class CadastrarFuncionarioRequest(BaseModel):
+    nome: str
+    email: str
+    papel: str  # "professor" | "coordenacao" | "direcao"
+    turmas: Optional[list[str]] = None
+
+
 class SolicitacaoOut(BaseModel):
     id: int
     nome: str
@@ -165,6 +172,40 @@ class SolicitacaoOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- Painel consolidado da escola (coordenação/direção) ---
+class TurmaResumoGestao(BaseModel):
+    turma: str
+    etapa: int
+    total_alunos: int
+    total_concluidos: int
+    nota_media: Optional[float]
+
+
+class SimuladoResumoGestao(BaseModel):
+    id: int
+    titulo: str
+    turmas: list[str]
+    nota_media: Optional[float]
+    total_concluidos: int
+    total_elegiveis: int
+    janela_inicio: datetime
+
+
+class RankingPratica(BaseModel):
+    aluno: str
+    rm: str
+    turma: str
+    total_respondidas: int
+    total_acertos: int
+
+
+class VisaoGeralEscola(BaseModel):
+    turmas: list[TurmaResumoGestao]
+    simulados: list[SimuladoResumoGestao]
+    ranking_habilidades_fracas: list[DesempenhoHabilidade]
+    ranking_pratica: list[RankingPratica]
 
 
 # --- Painel do professor ---

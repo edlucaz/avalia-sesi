@@ -20,6 +20,7 @@ import {
 import { corDesempenho } from "@/lib/desempenho";
 import { lerSessaoStaff, limparSessaoStaff } from "@/lib/session";
 import Marca from "@/components/Marca";
+import PainelGestao from "@/components/PainelGestao";
 
 const NOME_DISCIPLINA: Record<string, string> = {
   portugues: "Português",
@@ -179,6 +180,8 @@ export default function PainelProfessorPage() {
       </header>
 
       <div className="pagina">
+        {funcionario.papel !== "professor" && token && <PainelGestao token={token} />}
+
         {solicitacoes && solicitacoes.length > 0 && (
           <>
             <h1>Solicitações de acesso</h1>

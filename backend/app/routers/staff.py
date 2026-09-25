@@ -7,6 +7,7 @@ from app.auth_staff import (
     SENHA_PADRAO,
     TIPO_SESSAO_COMPLETA,
     TIPO_SESSAO_TROCA_SENHA,
+    apenas_gestao,
     conferir_senha,
     criar_token_funcionario,
     funcionario_atual,
@@ -14,8 +15,9 @@ from app.auth_staff import (
     hash_senha,
 )
 from app.database import get_db
-from app.models import Funcionario, Papel, StatusFuncionario
+from app.models import Funcionario, Papel, StatusFuncionario, Turma
 from app.schemas import (
+    CadastrarFuncionarioRequest,
     FuncionarioOut,
     SolicitacaoOut,
     SolicitarAcessoRequest,
@@ -97,6 +99,36 @@ def solicitar_acesso(payload: SolicitarAcessoRequest, db: Session = Depends(get_
     db.add(solicitacao)
     db.commit()
     return {"detail": "Solicitação enviada. Assim que um professor ou gestor aprovar, você recebe acesso."}
+
+
+@router.post("/cadastrar", response_model=FuncionarioOut, dependencies=[Depends(apenas_gestao)])
+def cadastrar_funcionario(payload: CadastrarFuncionarioRequest, db: Session = Depends(get_db)):
+    email = payload.email.strip().lower()
+    if db.query(Funcionario).filter(Funcionario.email == email).first():
+        raise HTTPException(status_code=409, detail="Já existe uma conta com esse e-mail")
+
+    try:
+        papel = Papel(payload.papel)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Papel inválido")
+
+    turmas = []
+    if payload.turmas:
+        turmas = db.query(Turma).filter(Turma.nome.in_([t.upper() for t in payload.turmas])).all()
+
+    funcionario = Funcionario(
+        nome=payload.nome.strip(),
+        email=email,
+        papel=papel,
+        senha_hash=hash_senha(SENHA_PADRAO),
+        precisa_trocar_senha=True,
+        status=StatusFuncionario.ATIVO,
+    )
+    funcionario.turmas = turmas
+    db.add(funcionario)
+    db.commit()
+    db.refresh(funcionario)
+    return FuncionarioOut.model_validate(funcionario)
 
 
 @router.get("/solicitacoes", response_model=list[SolicitacaoOut])

@@ -66,3 +66,13 @@ def funcionario_trocando_senha(
     """Token de escopo restrito: só serve pra chamar /staff/trocar-senha, emitido
     quando o login ainda está com a senha padrão."""
     return _funcionario_do_token(credentials.credentials, TIPO_SESSAO_TROCA_SENHA, db)
+
+
+def apenas_gestao(funcionario: Funcionario = Depends(funcionario_atual)) -> Funcionario:
+    """Restringe a rota a coordenação/direção — cadastro direto de funcionário e
+    o painel consolidado da escola não são coisa de professor comum."""
+    if not funcionario.pode_ver_tudo():
+        raise HTTPException(
+            status_code=403, detail="Só coordenação ou direção podem acessar isso"
+        )
+    return funcionario

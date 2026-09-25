@@ -264,6 +264,75 @@ export function recusarSolicitacao(token: string, id: number) {
   });
 }
 
+export interface CadastrarFuncionarioRequest {
+  nome: string;
+  email: string;
+  papel: string;
+  turmas?: string[];
+}
+
+export function cadastrarFuncionario(token: string, payload: CadastrarFuncionarioRequest) {
+  return request<Funcionario>("/api/staff/cadastrar", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+// --- Painel consolidado da escola (coordenação/direção) ---
+export interface TurmaResumoGestao {
+  turma: string;
+  etapa: number;
+  total_alunos: number;
+  total_concluidos: number;
+  nota_media: number | null;
+}
+
+export interface SimuladoResumoGestao {
+  id: number;
+  titulo: string;
+  turmas: string[];
+  nota_media: number | null;
+  total_concluidos: number;
+  total_elegiveis: number;
+  janela_inicio: string;
+}
+
+export interface RankingPratica {
+  aluno: string;
+  rm: string;
+  turma: string;
+  total_respondidas: number;
+  total_acertos: number;
+}
+
+export interface VisaoGeralEscola {
+  turmas: TurmaResumoGestao[];
+  simulados: SimuladoResumoGestao[];
+  ranking_habilidades_fracas: DesempenhoHabilidade[];
+  ranking_pratica: RankingPratica[];
+}
+
+export function buscarVisaoGeral(token: string) {
+  return request<VisaoGeralEscola>("/api/gestao/visao-geral", { token });
+}
+
+export async function baixarCsvResultados(token: string) {
+  const res = await fetch(`${API_URL}/api/gestao/exportar.csv`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new ApiError(res.status, "Não foi possível gerar o CSV.");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "avalia-sesi-resultados.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 // --- Modo treino ---
 export interface QuestaoTreino {
   questao_id: number;
