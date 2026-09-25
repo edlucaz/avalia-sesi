@@ -577,8 +577,8 @@
     "alternativas": {
       "a": "Servir a um mortal.",
       "b": "Construir uma muralha.",
-      "c": "Conspirar contra Zeus. Ensinar Apolo e Poseidon.",
-      "d": "",
+      "c": "Conspirar contra Zeus.",
+      "d": "Ensinar Apolo e Poseidon.",
       "e": "Trocar o tridente por uma pá."
     },
     "gabarito": "b",
@@ -642,7 +642,7 @@
       "b": "O tempo que os jovens dinamarqueses passam assistindo vídeos na internet.",
       "c": "A participação dos pais na escolha das plataformas digitais usadas pelos filhos.",
       "d": "A comparação entre os hábitos de uso de tecnologia das crianças da Dinamarca e da Austrália.",
-      "e": "A preocupação do governo dinamarquês com os efeitos das redes sociais no bem-estar das"
+      "e": "A preocupação do governo dinamarquês com os efeitos das redes sociais no bem-estar das crianças."
     },
     "gabarito": "e",
     "imagem_url": "/questoes/2026-1ap/lp/q12.png",
@@ -659,8 +659,8 @@
     "habilidade": "Identificar o tema de textos de diferentes gêneros.",
     "enunciado": "Leia o texto. O mito de Narciso Há muito tempo, na Grécia antiga, vivia Narciso, um jovem de beleza rara. Ele era vaidoso e orgulhoso, incapaz de amar alguém além de si mesmo. Entre as que se encantaram por ele estava a ninfa Eco, amaldiçoada por Hera a repetir apenas as últimas palavras que ouvia. Certo dia, Eco seguiu Narciso pela floresta. — Há alguém aí? — perguntou ele. — ...alguém aí? — respondeu a ninfa. Quando apareceu diante dele, tentou abraçá-lo, mas Narciso se afastou. — Afasta-te! Não quero teu amor. Ferida, Eco fugiu e definhou de tristeza, até restar apenas sua voz nas montanhas. Os deuses, irritados com a arrogância de Narciso, decidiram puni-lo. Um dia, ao inclinar-se sobre um lago, ele viu o reflexo de seu próprio rosto e se apaixonou perdidamente. Tentou tocá-lo, mas a imagem desaparecia. Preso ao próprio encanto, Narciso ficou ali, sem comer nem beber, até morrer. SANTOS (Município). O mito de Narciso: mito grego. [s.l.], [s.d.]. Disponível em: https://www.santos.sp.gov.br/static/ files_www/conteudo/SEDUC/EducaSatos/livro-ler-escrever.pdf. Acesso em: 14 nov. 2025. Qual é o tema principal desse mito?",
     "alternativas": {
-      "a": "O valor da amizade entre Narciso e Eco. O reflexo da imagem de Narciso no lago.",
-      "b": "",
+      "a": "O valor da amizade entre Narciso e Eco.",
+      "b": "O reflexo da imagem de Narciso no lago.",
       "c": "A insistência de Eco pelo amor de Narciso.",
       "d": "O amor exagerado de Narciso por si mesmo.",
       "e": "A maldição que faz Eco repetir as últimas palavras."
@@ -724,8 +724,8 @@
     "alternativas": {
       "a": "O autor acredita que a IA substitui a capacidade humana.",
       "b": "O autor considera que a IA representa um retrocesso.",
-      "c": "O autor pensa que os avanços da IA são superficiais. O autor é contra os benefícios que a IA apresenta.",
-      "d": "",
+      "c": "O autor pensa que os avanços da IA são superficiais.",
+      "d": "O autor é contra os benefícios que a IA apresenta.",
       "e": "O autor vê a IA como uma tecnologia promissora."
     },
     "gabarito": "e",
@@ -783,9 +783,9 @@
     "tipo_item": "etapa",
     "descritor": "Identificar o uso do discurso direto e/ou indireto em textos de diferentes gêneros.",
     "habilidade": "EF.05.LP.2.33",
-    "enunciado": "Leia o texto. Tenho seis anos e mamãe me leva ao suque pela primeira vez. O táxi nos deixa no grande estacionamento. Mamãe tinha me avisado: “Não largue minha mão, vai ter muita gente. Com certeza muito mais gente do que você já viu”. E ela tinha razão. Mamãe me pede para fechar os olhos. Obedeço, muito feliz por poder entrar na brincadeira. “Olhe agora”. Quando abro os olhos, tudo brilha intensamente a minha volta. As tendas de tecidos tinham dado lugar às dos joalheiros. Quilos, toneladas de ouro cintilavam. Colares, pulseiras escorriam das vitrines em rios dourados. Vocabulário: Suque: feira ou mercado tradicional, comum em países árabes e no Norte de África. Rawick, Myriam. O diário de Myriam – Myriam Rawick com Philippe Lobjois; tradução de Maria Clara Carneiro. Rio de Janeiro, DarkSide Books, 2018. Adaptado. No texto, qual é a função do uso das aspas? Marcar palavras pouco conhecidas.",
+    "enunciado": "Leia o texto. Tenho seis anos e mamãe me leva ao suque pela primeira vez. O táxi nos deixa no grande estacionamento. Mamãe tinha me avisado: “Não largue minha mão, vai ter muita gente. Com certeza muito mais gente do que você já viu”. E ela tinha razão. Mamãe me pede para fechar os olhos. Obedeço, muito feliz por poder entrar na brincadeira. “Olhe agora”. Quando abro os olhos, tudo brilha intensamente a minha volta. As tendas de tecidos tinham dado lugar às dos joalheiros. Quilos, toneladas de ouro cintilavam. Colares, pulseiras escorriam das vitrines em rios dourados. Vocabulário: Suque: feira ou mercado tradicional, comum em países árabes e no Norte de África. Rawick, Myriam. O diário de Myriam – Myriam Rawick com Philippe Lobjois; tradução de Maria Clara Carneiro. Rio de Janeiro, DarkSide Books, 2018. Adaptado. No texto, qual é a função do uso das aspas?",
     "alternativas": {
-      "a": "",
+      "a": "Marcar palavras pouco conhecidas.",
       "b": "Separar um acontecimento do outro.",
       "c": "Reproduzir as falas das personagens.",
       "d": "Indicar eventos mencionados no texto.",
@@ -806,11 +806,11 @@
     "habilidade": "EF.05.LP.2.33",
     "enunciado": "Leia o texto. Prometeu Prometeu ensinou os homens a fazerem fogo. Com isso eles passaram a cozinhar alimentos, a fabricar ferramentas com ferro derretido e a se reunir nas cavernas, em torno da fogueira, para contar suas aventuras e conquistas. Prometeu perguntou o que seria das pessoas quando quisessem transmitir seus conhecimentos umas às outras. E foi assim que ele ensinou aos homens a arte da escrita, para que pudessem registrar esses conhecimentos. Entusiasmado, também ensinou a matemática, as ciências da natureza, a mineração e a navegação. Heloisa Prieto. Divinas travessuras: mais histórias da mitologia grega. São Paulo: Companhia das letrinhas, 2012. Adaptado. No texto, qual frase indica o uso do discurso indireto?",
     "alternativas": {
-      "a": "“Prometeu ensinou os homens a fazerem fogo.” “E foi assim que ele ensinou aos homens a arte da escrita, [...]”.",
-      "b": "",
+      "a": "“Prometeu ensinou os homens a fazerem fogo.”",
+      "b": "“E foi assim que ele ensinou aos homens a arte da escrita, [...]”.",
       "c": "“[...] a fabricar ferramentas com ferro derretido e a se reunir nas cavernas, [...]”.",
       "d": "“Entusiasmado, ensinou a matemática, as ciências da natureza, a mineração e a navegação”.",
-      "e": "“Prometeu perguntou o que seria das pessoas quando quiserem transmitir seus conhecimentos"
+      "e": "“Prometeu perguntou o que seria das pessoas quando quiserem transmitir seus conhecimentos umas às outras”."
     },
     "gabarito": "e",
     "imagem_url": "/questoes/2026-1ap/lp/q24.png",
@@ -870,8 +870,8 @@
     "enunciado": "Leia o texto. Repórter mirim – Cuidar da Terra também é economia Felipe Sali 8 de out.2025 No dia 10 de novembro, o Brasil recebe um dos maiores encontros sobre o futuro do planeta: a 30ª Conferência das Nações Unidas Sobre Mudanças Climáticas (COP30). Para discutir este tema, os repórteres mirins conversaram com Marcelo Behar, enviado especial da COP30 para Bioeconomia. Marcelo diz que “bioeconomia é uma maneira de fazer as coisas e produzir tudo o que precisamos – para comer, morar, nos cuidar – utilizando recursos renováveis. [...] Dentro de casa, separar o lixo faz grande diferença. Organizar o que é orgânico separado do que é reciclável é essencial”. SALI, Felipe. Repórter mirim – Cuidar da Terra também é economia. n. 249. Disponível em: https://app.jornaljoca. com.br/artigo/reporter-mirim-cuidar-da-terra-tambem-e-economia. Acesso em: 20 mar. 2026. Adaptado. Qual palavra apresenta o mesmo som de X que a palavra destacada no texto?",
     "alternativas": {
       "a": "Texto.",
-      "b": "Xícara. Exemplo.",
-      "c": "",
+      "b": "Xícara.",
+      "c": "Exemplo.",
       "d": "Complexo.",
       "e": "Experiência."
     },
@@ -890,8 +890,8 @@
     "habilidade": "Identificar padrões ortográficos na escrita das palavras, com base em palavras de referência",
     "enunciado": "Leia o texto. Peixes-palhaço estão encolhendo para sobreviver ao aquecimento dos oceanos [...] Durante o verão de 2023, uma intensa onda de calor causou o branqueamento de grandes faixas de corais. Nesse contexto, pesquisadores mediram o tamanho de peixes-palhaço selvagens e constataram que 75% deles ficaram menores, perdendo vários milímetros de comprimento, além do peso. JORNAL JOCA. Peixes-palhaço estão encolhendo para sobreviver ao aquecimento dos oceanos. n. 243. Disponível em: https://jornaljoca.com.br/. Acesso em: 6 mar. 2026. O que as palavras destacadas têm em comum?",
     "alternativas": {
-      "a": "Elas têm a letra x com som de “z”. Elas têm a letra x com som de “s”.",
-      "b": "",
+      "a": "Elas têm a letra x com som de “z”.",
+      "b": "Elas têm a letra x com som de “s”.",
       "c": "Elas têm a letra x com som de “ss”.",
       "d": "Elas têm a letra x com som de “ch”.",
       "e": "Elas têm a letra x com som de “cs”."
@@ -975,8 +975,8 @@
     "enunciado": "Leia o texto. Lenda do diamante Conta-se que numa aldeia, o casal Itagibá e Potira vivia feliz. No entanto, a tribo foi atacada e Itagibá precisou partir para a guerra junto com os outros guerreiros. Chegado o grande dia, os indígenas subiram na canoa e seguiram rio acima. Potira, sua esposa, ficou à beira do rio esperando pelo seu amado. Passaram-se várias luas antes que os homens voltassem para casa. Quando Potira avistou as embarcações no horizonte, sentiu uma grande alegria, pois Itagibá estaria entre eles. Qual não foi sua surpresa ao perceber que seu marido não havia regressado do combate. Potira se desesperou e começou a chorar amargamente. Triste, caiu na areia e soluçava sem parar. Tupã, o deus poderoso, compadecido com a dor da jovem indígena, transformou suas lágrimas em diamantes, que só podem ser descobertos entre os cascalhos e a areia do rio. Fonte: TodaMatéria. Lendas indígenas. Disponível em: https://www.todamateria.com.br/lendas-indigenas/. Acesso em: 21 nov. 2025. Qual é o conflito gerador dessa lenda?",
     "alternativas": {
       "a": "A vida feliz que o casal Itagibá e Potira levava na aldeia.",
-      "b": "A tristeza de Potira ao perceber que Itagiba não retornou. A alegria de Potira ao ver as canoas se aproximando pelo rio.",
-      "c": "",
+      "b": "A tristeza de Potira ao perceber que Itagiba não retornou.",
+      "c": "A alegria de Potira ao ver as canoas se aproximando pelo rio.",
       "d": "A demora para os guerreiros voltarem para casa depois da guerra.",
       "e": "A ação de Tupã em transformar as lágrimas de Potira em diamantes."
     },
@@ -996,8 +996,8 @@
     "enunciado": "Leia o texto. “Em 2022, ano de eleições gerais, a Légis, personagem que fala sobre política, deu uma entrevista ao Jornal da Criança, uma publicação superbacana voltada ao público infantojuvenil. [...] Repórter: Para começar, Légis, o que é Constituição? Légis: A Constituição, ou Carta Magna, é a lei mais importante do País. Outras leis podem ser criadas para explicar melhor um trecho ou outro da Constituição, mas nunca poderão invalidá-la. O Brasil já está na sua sétima Constituição: o nome oficial é Constituição Federal de 1988, mas pode chamar de Constituição Cidadã. Repórter: Por que “Cidadã”? Légis: A Constituição Federal de 1988 é chamada de cidadã porque ampliou as garantias e liberdades das pessoas, restabeleceu as eleições livres e diretas, acabou com a censura, criou novos direitos trabalhistas e permitiu o voto de pessoas analfabetas e de jovens a partir de 16 anos. [...]” A Turma explica as eleições. Disponível em: https://plenarinho.leg.br/index.php/2022/08/turma-explica-eleicoes- constituicao-e-presidente-da-republica/ Acesso em: 19 fev. 2026. Por que esse texto é voltado ao público infantojuvenil?",
     "alternativas": {
       "a": "Porque apresenta explicações sobre um assunto de modo acessível.",
-      "b": "Porque apresenta perguntas e respostas no formato de entrevista. Porque apresenta termos técnicos e linguagem especializada.",
-      "c": "",
+      "b": "Porque apresenta perguntas e respostas no formato de entrevista.",
+      "c": "Porque apresenta termos técnicos e linguagem especializada.",
       "d": "Porque apresenta exemplos que ajudam na compreensão.",
       "e": "Porque apresenta as opiniões pessoais do repórter."
     },
@@ -1019,8 +1019,8 @@
       "a": "Ela mostra que a aurora boreal é um fenômeno de luzes coloridas, que aparece em regiões quentes.",
       "b": "Ela mostra que as pessoas viajaram a países como Islândia, Finlândia e Noruega, para observar a aurora boreal.",
       "c": "Ela mostra que as câmeras registraram melhor as cores no escuro do que os olhos conseguem enxergar a olho nu.",
-      "d": "Ela mostra que aconteceu uma forte onda de frio, por isso as pessoas ficaram dentro de casa para se proteger. Ela mostra que a aurora boreal foi vista de outros lugares, além de onde costuma aparecer.",
-      "e": ""
+      "d": "Ela mostra que aconteceu uma forte onda de frio, por isso as pessoas ficaram dentro de casa para se proteger.",
+      "e": "Ela mostra que a aurora boreal foi vista de outros lugares, além de onde costuma aparecer."
     },
     "gabarito": "e",
     "imagem_url": "/questoes/2026-1ap/lp/q16.png",
@@ -1035,9 +1035,9 @@
     "tipo_item": "conexao",
     "descritor": "Identificar o conflito gerador de uma narrativa.",
     "habilidade": "Identificar o conflito gerador de uma narrativa.",
-    "enunciado": "Leia o texto. Lenda do Sol e da Lua Existiam dois povos rivais. Eles viviam próximos um do outro, mas nunca se encontravam, pois era proibido que tivessem contato. Um dia, um jovem guerreiro saiu para caçar na floresta e conheceu uma bela indígena do grupo rival. Eles se interessaram um pelo outro e passaram a se encontrar mais vezes. Assim foi nascendo um grande amor. Sempre que podiam, os jovens arranjavam uma forma de estarem juntos sem que ninguém soubesse. Certa vez, no entanto, um dos integrantes da comunidade em que o rapaz vivia flagrou o encontro dos dois. Eles foram levados à aldeia e seriam punidos. O cacique era o pai do guerreiro e ficou muito angustiado com a situação. Ele pediu, então, ao pajé que preparasse uma poção mágica para salvar o casal. Assim foi feito. Os dois tomaram a poção e se transformaram em astros do céu. Ele virou o Sol e ela, a Lua. Infelizmente, o Sol e a Lua quase nunca se encontram, exceto quando ocorrem os eclipses; é nesse momento que o casal volta a se encontrar. Fonte: Instituto Claro. Lendas indígenas do guaraná, do sol e da lua e da mandioca. Disponível em: https://www.institutoclaro.org.br. Acesso em: 21 nov. 2025. Qual é o conflito gerador da Lenda do Sol e da Lua? A angústia do cacique diante da situação do filho.",
+    "enunciado": "Leia o texto. Lenda do Sol e da Lua Existiam dois povos rivais. Eles viviam próximos um do outro, mas nunca se encontravam, pois era proibido que tivessem contato. Um dia, um jovem guerreiro saiu para caçar na floresta e conheceu uma bela indígena do grupo rival. Eles se interessaram um pelo outro e passaram a se encontrar mais vezes. Assim foi nascendo um grande amor. Sempre que podiam, os jovens arranjavam uma forma de estarem juntos sem que ninguém soubesse. Certa vez, no entanto, um dos integrantes da comunidade em que o rapaz vivia flagrou o encontro dos dois. Eles foram levados à aldeia e seriam punidos. O cacique era o pai do guerreiro e ficou muito angustiado com a situação. Ele pediu, então, ao pajé que preparasse uma poção mágica para salvar o casal. Assim foi feito. Os dois tomaram a poção e se transformaram em astros do céu. Ele virou o Sol e ela, a Lua. Infelizmente, o Sol e a Lua quase nunca se encontram, exceto quando ocorrem os eclipses; é nesse momento que o casal volta a se encontrar. Fonte: Instituto Claro. Lendas indígenas do guaraná, do sol e da lua e da mandioca. Disponível em: https://www.institutoclaro.org.br. Acesso em: 21 nov. 2025. Qual é o conflito gerador da Lenda do Sol e da Lua?",
     "alternativas": {
-      "a": "",
+      "a": "A angústia do cacique diante da situação do filho.",
       "b": "A punição que o casal receberia na aldeia.",
       "c": "A descoberta do encontro entre os jovens.",
       "d": "A saída do jovem para caçar na floresta.",
@@ -1060,8 +1060,8 @@
     "alternativas": {
       "a": "Descrever as construções do bairro antes e depois das bombas.",
       "b": "Apresentar dados científicos a respeito das consequências da guerra.",
-      "c": "Registrar lembranças e sentimentos ao rever a antiga casa após a guerra. Contar uma história inventada para entreter o leitor com aventura e suspense.",
-      "d": "",
+      "c": "Registrar lembranças e sentimentos ao rever a antiga casa após a guerra.",
+      "d": "Contar uma história inventada para entreter o leitor com aventura e suspense.",
       "e": "Convencer as pessoas a visitarem o bairro após as mudanças que aconteceram."
     },
     "gabarito": "c",
@@ -1081,8 +1081,8 @@
     "alternativas": {
       "a": "Relatar uma sequência de ações vividas por personagens indígenas.",
       "b": "Ensinar o passo a passo de uma brincadeira tradicional indígena.",
-      "c": "Transmitir informações reais, com caráter informativo. Apresentar uma comunicação pessoal entre as crianças.",
-      "d": "",
+      "c": "Transmitir informações reais, com caráter informativo.",
+      "d": "Apresentar uma comunicação pessoal entre as crianças.",
       "e": "Utilizar a estrutura de rimas e versos para divertir o leitor."
     },
     "gabarito": "c",

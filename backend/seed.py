@@ -100,6 +100,16 @@ db.add_all(funcionarios)
 db.commit()
 
 dados_questoes = json.loads(QUESTOES_5ANO_PATH.read_text())
+
+# Extração de PDF às vezes cola duas alternativas numa só e deixa a seguinte vazia.
+for q in dados_questoes:
+    vazias = [letra for letra, texto in q["alternativas"].items() if not texto.strip()]
+    if vazias or q["gabarito"] not in q["alternativas"]:
+        raise SystemExit(
+            f"Questão inválida ({q['imagem_url']}): alternativas vazias {vazias}, "
+            f"gabarito '{q['gabarito']}'. Confira o texto contra a imagem da prova."
+        )
+
 todas_questoes = [
     Questao(
         disciplina=Disciplina(q["disciplina"]),
