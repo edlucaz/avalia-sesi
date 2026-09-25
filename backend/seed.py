@@ -152,13 +152,13 @@ db.commit()
 # o banco guarda em UTC. Nascem bloqueados até o professor liberar na data.
 BRASILIA = timezone(timedelta(hours=-3))
 CRONOGRAMA_5A = [
-    # (nº, questões, início, fim)
-    (1, 12, date(2026, 9, 28), date(2026, 10, 2)),
-    (2, 14, date(2026, 10, 5), date(2026, 10, 9)),
-    (3, 18, date(2026, 10, 19), date(2026, 10, 23)),
-    (4, 22, date(2026, 10, 26), date(2026, 10, 30)),
-    (5, 26, date(2026, 11, 3), date(2026, 11, 6)),
-    (6, 26, date(2026, 11, 9), date(2026, 11, 13)),
+    # (nº, questões, minutos, início, fim)
+    (1, 12, 40, date(2026, 9, 28), date(2026, 10, 2)),
+    (2, 14, 60, date(2026, 10, 5), date(2026, 10, 9)),
+    (3, 18, 60, date(2026, 10, 19), date(2026, 10, 23)),
+    (4, 22, 60, date(2026, 10, 26), date(2026, 10, 30)),
+    (5, 26, 60, date(2026, 11, 3), date(2026, 11, 6)),
+    (6, 26, 60, date(2026, 11, 9), date(2026, 11, 13)),
 ]
 
 
@@ -166,12 +166,12 @@ def _utc(dia: date, hora: time) -> datetime:
     return datetime.combine(dia, hora, BRASILIA).astimezone(timezone.utc).replace(tzinfo=None)
 
 
-for numero, qtd, inicio, fim in CRONOGRAMA_5A:
+for numero, qtd, minutos, inicio, fim in CRONOGRAMA_5A:
     agendado = Simulado(
         titulo=f"{numero}º Simulado — Projeto Avalia ({qtd} questões)",
         etapa=5,
         trimestre=1,
-        tempo_limite_min=60,
+        tempo_limite_min=minutos,
         janela_inicio=_utc(inicio, time(0, 0)),
         janela_fim=_utc(fim, time(23, 59, 59)),
         modo_sorteio=ModoSorteio.TURMA_FIXA,

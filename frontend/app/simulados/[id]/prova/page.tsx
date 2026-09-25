@@ -36,6 +36,7 @@ export default function ProvaPage() {
   const [respostas, setRespostas] = useState<Record<number, RespostaLocal>>({});
   const [indice, setIndice] = useState(0);
   const [tempoRestante, setTempoRestante] = useState<number | null>(null);
+  const [tempoTotal, setTempoTotal] = useState<number | null>(null);
   const [confirmando, setConfirmando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erroCarregamento, setErroCarregamento] = useState<string | null>(null);
@@ -43,6 +44,9 @@ export default function ProvaPage() {
   const [leitorAuto, setLeitorAuto] = useState(false);
 
   const enviandoRef = useRef(false);
+  // Horário de término (relógio do aparelho): o contador é recalculado a partir
+  // dele, então não atrasa quando o navegador pausa a aba ou a tela bloqueia.
+  const fimEmRef = useRef<number | null>(null);
   const avisoSalvoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { suportado: leitorSuportado, estado: estadoLeitura, segmentoAtual, falar, pausar, retomar, parar } =
     useLeitorDeApoio();
@@ -80,6 +84,8 @@ export default function ProvaPage() {
       .then((dados) => {
         setTentativaId(dados.tentativa_id);
         setQuestoes(dados.questoes);
+        fimEmRef.current = Date.now() + dados.tempo_restante_seg * 1000;
+        setTempoTotal(dados.tempo_limite_min * 60);
         setTempoRestante(dados.tempo_restante_seg);
       })
       .catch((err) => {
@@ -130,7 +136,8 @@ export default function ProvaPage() {
       return;
     }
     const intervalo = setInterval(() => {
-      setTempoRestante((atual) => (atual !== null ? atual - 1 : atual));
+      if (fimEmRef.current === null) return;
+      setTempoRestante(Math.max(0, Math.ceil((fimEmRef.current - Date.now()) / 1000)));
     }, 1000);
     return () => clearInterval(intervalo);
   }, [tempoRestante, finalizar]);
@@ -196,14 +203,32 @@ export default function ProvaPage() {
   const respostaAtual = respostas[questaoAtual.id];
   const totalRespondidas = Object.values(respostas).filter((r) => r.alternativa).length;
   const alertaTempo = tempoRestante <= 60;
+  const avisoTempo = !alertaTempo && tempoRestante <= 5 * 60;
+  const classeTempo = alertaTempo ? "alerta" : avisoTempo ? "aviso" : "";
+  const pctTempo = tempoTotal ? Math.min(100, (tempoRestante / tempoTotal) * 100) : 100;
 
   return (
     <div className="tela-prova">
-      <div className="barra-prova">
-        <strong>{questaoAtual.disciplina === "portugues" ? "Português" : "Matemática"}</strong>
-        <span className={`cronometro ${alertaTempo ? "alerta" : ""}`}>
-          {formatarTempo(tempoRestante)}
-        </span>
+      <div className="topo-prova">
+        <div className="barra-prova">
+          <strong>{questaoAtual.disciplina === "portugues" ? "Português" : "Matemática"}</strong>
+          <div
+            className={`cronometro ${classeTempo}`}
+            role="timer"
+            aria-label={`Tempo restante: ${Math.ceil(tempoRestante / 60)} minutos`}
+          >
+            <span className="cronometro-rotulo">⏱ Tempo restante</span>
+            <span className="cronometro-valor">{formatarTempo(tempoRestante)}</span>
+          </div>
+        </div>
+        <div className="barra-tempo" aria-hidden="true">
+          <div className={`barra-tempo-preenchida ${classeTempo}`} style={{ width: `${pctTempo}%` }} />
+        </div>
+        {avisoTempo && tempoRestante > 5 * 60 - 15 && (
+          <div className="aviso-tempo" role="status">
+            Faltam 5 minutos! Confira as questões que ainda estão em branco.
+          </div>
+        )}
       </div>
 
       <div className="grade-navegacao">

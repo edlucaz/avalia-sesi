@@ -60,6 +60,13 @@ def _garantir_questoes_turma_fixa(simulado: Simulado, db: Session):
     de qualquer aluno) e fica salvo no próprio simulado, compartilhado por todos."""
     if simulado.questoes:
         return
+    # Trava a linha do simulado (Postgres) para que alunos começando ao mesmo
+    # tempo não sorteiem cada um o seu conjunto e somem as questões.
+    db.query(Simulado).filter(Simulado.id == simulado.id).with_for_update().one()
+    if db.query(SimuladoQuestao).filter(SimuladoQuestao.simulado_id == simulado.id).count():
+        db.commit()
+        db.refresh(simulado)
+        return
     escolhidas = _sortear_questoes(simulado, db)
     for ordem, questao in enumerate(escolhidas, start=1):
         db.add(SimuladoQuestao(simulado_id=simulado.id, questao_id=questao.id, ordem=ordem))

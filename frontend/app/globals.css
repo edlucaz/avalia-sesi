@@ -258,23 +258,72 @@ a:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.topo-prova {
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .cronometro {
-  font-size: 20px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
   padding: 6px 14px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.15);
 }
 
+.cronometro-rotulo {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.cronometro-valor {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cronometro.aviso {
+  background: var(--sesi-amarelo);
+  color: var(--sesi-azul-marinho);
+}
+
 .cronometro.alerta {
   background: var(--sesi-vermelho);
   animation: pulsar 1s infinite;
+}
+
+.barra-tempo {
+  height: 6px;
+  background: rgba(7, 74, 113, 0.15);
+}
+
+.barra-tempo-preenchida {
+  height: 100%;
+  background: var(--sesi-azul-marinho);
+  transition: width 1s linear;
+}
+
+.barra-tempo-preenchida.aviso {
+  background: var(--sesi-amarelo);
+}
+
+.barra-tempo-preenchida.alerta {
+  background: var(--sesi-vermelho);
+}
+
+.aviso-tempo {
+  background: #fff4dc;
+  color: var(--sesi-azul-marinho);
+  border-bottom: 2px solid var(--sesi-amarelo);
+  padding: 10px 20px;
+  font-weight: 600;
+  text-align: center;
 }
 
 @keyframes pulsar {

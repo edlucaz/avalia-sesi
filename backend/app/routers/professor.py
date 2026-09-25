@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth_staff import funcionario_atual
 from app.database import get_db
+from app.routers.tentativas import _garantir_questoes_turma_fixa
 from app.models import Funcionario, ModoSorteio, Questao, Resposta, Simulado, StatusTentativa, Tentativa, Turma
 from app.schemas import (
     AlunoPainel,
@@ -69,6 +70,9 @@ def liberar_simulado(
         raise HTTPException(status_code=403, detail="Você não tem acesso às turmas deste simulado")
     simulado.liberado = True
     db.commit()
+    # Sorteia já na liberação: a turma inteira começa com o conjunto pronto.
+    if not simulado.sorteia_por_aluno():
+        _garantir_questoes_turma_fixa(simulado, db)
     return _simulado_out(simulado)
 
 
