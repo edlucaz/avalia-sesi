@@ -9,14 +9,18 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from app.auth_staff import SENHA_PADRAO, hash_senha
 from app.database import Base, SessionLocal, engine
 from app.models import (
     Aluno,
     Disciplina,
+    Funcionario,
     MetaInstitucional,
     ModoSorteio,
+    Papel,
     Questao,
     Simulado,
+    StatusFuncionario,
     TipoItem,
     Turma,
 )
@@ -47,6 +51,52 @@ alunos = [
     Aluno(rm="50005", nome="Elisa Nunes Pereira", turma_id=turmas["5B"].id),
 ]
 db.add_all(alunos)
+db.commit()
+
+senha_padrao_hash = hash_senha(SENHA_PADRAO)
+funcionarios = [
+    Funcionario(
+        nome="Lucas Rocha",
+        email="lucas.erocha@sesisp.org.br",
+        papel=Papel.PROFESSOR,
+        senha_hash=senha_padrao_hash,
+        precisa_trocar_senha=True,
+        status=StatusFuncionario.ATIVO,
+    ),
+    Funcionario(
+        nome="Paola Lima",
+        email="paola.lima@sesisp.org.br",
+        papel=Papel.PROFESSOR,
+        senha_hash=senha_padrao_hash,
+        precisa_trocar_senha=True,
+        status=StatusFuncionario.ATIVO,
+    ),
+    Funcionario(
+        nome="Thaize Simionatto",
+        email="thaize.simionatto@sesisp.org.br",
+        papel=Papel.PROFESSOR,
+        senha_hash=senha_padrao_hash,
+        precisa_trocar_senha=True,
+        status=StatusFuncionario.ATIVO,
+    ),
+    Funcionario(
+        nome="Adriana Barai",
+        email="adriana.barai@sesisp.org",
+        papel=Papel.DIRECAO,
+        senha_hash=senha_padrao_hash,
+        precisa_trocar_senha=True,
+        status=StatusFuncionario.ATIVO,
+    ),
+    Funcionario(
+        nome="Anna Leticia",
+        email="anna.leticia@sesisp.org.br",
+        papel=Papel.COORDENACAO,
+        senha_hash=senha_padrao_hash,
+        precisa_trocar_senha=True,
+        status=StatusFuncionario.ATIVO,
+    ),
+]
+db.add_all(funcionarios)
 db.commit()
 
 dados_questoes = json.loads(QUESTOES_5ANO_PATH.read_text())
@@ -80,7 +130,7 @@ simulado = Simulado(
     tempo_limite_min=30,
     janela_inicio=datetime.utcnow() - timedelta(days=1),
     janela_fim=datetime.utcnow() + timedelta(days=365),
-    modo_sorteio=ModoSorteio.POR_ALUNO,
+    modo_sorteio=ModoSorteio.TURMA_FIXA,
     qtd_matematica=5,
     qtd_portugues=5,
 )
@@ -98,8 +148,9 @@ db.commit()
 
 print("Seed concluído:")
 print(f"  {len(turmas)} turmas, {len(alunos)} alunos")
+print(f"  {len(funcionarios)} funcionários (professores/gestão) — senha padrão: {SENHA_PADRAO}")
 print(f"  Banco de questões reais do 5º ano: {qtd_mt} de Matemática + {qtd_lp} de Português")
-print(f"  Simulado #{simulado.id}: '{simulado.titulo}' — sorteia 5+5 por aluno a cada tentativa")
+print(f"  Simulado #{simulado.id}: '{simulado.titulo}' — mesmo sorteio (turma_fixa) pra 5A e 5B")
 print()
-print("Login de teste: RM 50001, turma 5A")
-print("Token do professor (painel): dev-professor (ou o valor de PROFESSOR_TOKEN no .env)")
+print("Login de aluno de teste: RM 50001, turma 5A")
+print("Login de professor/gestão: um dos e-mails cadastrados + senha padrão (troca no primeiro acesso)")

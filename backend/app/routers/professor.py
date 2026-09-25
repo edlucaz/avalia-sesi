@@ -1,11 +1,11 @@
-import os
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.auth_staff import funcionario_atual
 from app.database import get_db
-from app.models import ModoSorteio, Questao, Resposta, Simulado, StatusTentativa, Tentativa, Turma
+from app.models import Funcionario, ModoSorteio, Questao, Resposta, Simulado, StatusTentativa, Tentativa, Turma
 from app.schemas import (
     AlunoPainel,
     DesempenhoHabilidade,
@@ -17,23 +17,26 @@ from app.schemas import (
 
 router = APIRouter(prefix="/api/professor", tags=["professor"])
 
-PROFESSOR_TOKEN = os.getenv("PROFESSOR_TOKEN", "dev-professor")
+
+def turmas_visiveis(funcionario: Funcionario, db: Session) -> list[Turma]:
+    if funcionario.pode_ver_tudo() or not funcionario.turmas:
+        return db.query(Turma).order_by(Turma.nome).all()
+    return sorted(funcionario.turmas, key=lambda t: t.nome)
 
 
-def professor_autorizado(x_professor_token: str | None = Header(default=None)):
-    if x_professor_token != PROFESSOR_TOKEN:
-        raise HTTPException(status_code=401, detail="Acesso de professor não autorizado")
+@router.get("/turmas", response_model=list[TurmaOut])
+def listar_turmas(
+    funcionario: Funcionario = Depends(funcionario_atual),
+    db: Session = Depends(get_db),
+):
+    return turmas_visiveis(funcionario, db)
 
 
-@router.get("/turmas", response_model=list[TurmaOut], dependencies=[Depends(professor_autorizado)])
-def listar_turmas(db: Session = Depends(get_db)):
-    return db.query(Turma).order_by(Turma.nome).all()
-
-
-@router.get(
-    "/simulados", response_model=list[SimuladoCriado], dependencies=[Depends(professor_autorizado)]
-)
-def listar_simulados(db: Session = Depends(get_db)):
+@router.get("/simulados", response_model=list[SimuladoCriado])
+def listar_simulados(
+    funcionario: Funcionario = Depends(funcionario_atual),
+    db: Session = Depends(get_db),
+):
     simulados = db.query(Simulado).order_by(Simulado.id.desc()).all()
     return [
         SimuladoCriado(
@@ -50,10 +53,12 @@ def listar_simulados(db: Session = Depends(get_db)):
     ]
 
 
-@router.post(
-    "/simulados", response_model=SimuladoCriado, dependencies=[Depends(professor_autorizado)]
-)
-def criar_simulado(payload: SimuladoCriarRequest, db: Session = Depends(get_db)):
+@router.post("/simulados", response_model=SimuladoCriado)
+def criar_simulado(
+    payload: SimuladoCriarRequest,
+    _funcionario: Funcionario = Depends(funcionario_atual),
+    db: Session = Depends(get_db),
+):
     turmas = db.query(Turma).filter(Turma.nome.in_([t.upper() for t in payload.turmas])).all()
     if not turmas:
         raise HTTPException(status_code=400, detail="Nenhuma turma válida informada")
@@ -92,12 +97,13 @@ def criar_simulado(payload: SimuladoCriarRequest, db: Session = Depends(get_db))
     )
 
 
-@router.get(
-    "/simulados/{simulado_id}/painel",
-    response_model=PainelSimulado,
-    dependencies=[Depends(professor_autorizado)],
-)
-def painel_simulado(simulado_id: int, turma: str, db: Session = Depends(get_db)):
+@router.get("/simulados/{simulado_id}/painel", response_model=PainelSimulado)
+def painel_simulado(
+    simulado_id: int,
+    turma: str,
+    _funcionario: Funcionario = Depends(funcionario_atual),
+    db: Session = Depends(get_db),
+):
     simulado = db.query(Simulado).filter(Simulado.id == simulado_id).first()
     if not simulado:
         raise HTTPException(status_code=404, detail="Simulado não encontrado")

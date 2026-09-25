@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import CORS_ORIGINS
 from app.database import Base, engine
-from app.routers import auth, pratica, professor, questoes, simulados, tentativas
+from app.routers import auth, pratica, professor, questoes, simulados, staff, tentativas
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,6 +23,7 @@ app.include_router(tentativas.router)
 app.include_router(professor.router)
 app.include_router(questoes.router)
 app.include_router(pratica.router)
+app.include_router(staff.router)
 
 
 @app.get("/api/health")

@@ -38,10 +38,29 @@ class ModoSorteio(str, enum.Enum):
     TURMA_FIXA = "turma_fixa"  # sorteio único, compartilhado por todas as tentativas do simulado
 
 
+class Papel(str, enum.Enum):
+    PROFESSOR = "professor"
+    COORDENACAO = "coordenacao"
+    DIRECAO = "direcao"
+
+
+class StatusFuncionario(str, enum.Enum):
+    PENDENTE = "pendente"  # solicitou acesso, aguardando aprovação de alguém já ativo
+    ATIVO = "ativo"
+    RECUSADO = "recusado"
+
+
 simulado_turma = Table(
     "simulado_turma",
     Base.metadata,
     Column("simulado_id", ForeignKey("simulados.id"), primary_key=True),
+    Column("turma_id", ForeignKey("turmas.id"), primary_key=True),
+)
+
+funcionario_turma = Table(
+    "funcionario_turma",
+    Base.metadata,
+    Column("funcionario_id", ForeignKey("funcionarios.id"), primary_key=True),
     Column("turma_id", ForeignKey("turmas.id"), primary_key=True),
 )
 
@@ -55,6 +74,29 @@ class Turma(Base):
 
     alunos = relationship("Aluno", back_populates="turma")
     simulados = relationship("Simulado", secondary=simulado_turma, back_populates="turmas_alvo")
+
+
+class Funcionario(Base):
+    """Professor, coordenação ou direção — login por e-mail institucional + senha
+    (nunca RM/carteirinha: aqui o e-mail já é o identificador único)."""
+
+    __tablename__ = "funcionarios"
+
+    id = Column(Integer, primary_key=True)
+    nome = Column(String, nullable=False)
+    email = Column(String, nullable=False, unique=True, index=True)
+    papel = Column(Enum(Papel), nullable=False, default=Papel.PROFESSOR)
+    senha_hash = Column(String, nullable=True)  # nulo enquanto status == pendente
+    precisa_trocar_senha = Column(Boolean, nullable=False, default=True)
+    status = Column(Enum(StatusFuncionario), nullable=False, default=StatusFuncionario.ATIVO)
+    criado_em = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Só relevante pro papel "professor" — coordenação/direção enxergam todas as
+    # turmas independentemente disso. Vazio = também enxerga todas (fallback).
+    turmas = relationship("Turma", secondary=funcionario_turma)
+
+    def pode_ver_tudo(self) -> bool:
+        return self.papel in (Papel.COORDENACAO, Papel.DIRECAO)
 
 
 class Aluno(Base):

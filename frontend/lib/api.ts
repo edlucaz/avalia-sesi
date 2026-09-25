@@ -191,15 +191,77 @@ export interface PainelSimulado {
   alunos: AlunoPainel[];
 }
 
-export function buscarPainelProfessor(
-  professorToken: string,
-  simuladoId: number,
-  turma: string
-) {
+export function buscarPainelProfessor(token: string, simuladoId: number, turma: string) {
   return request<PainelSimulado>(
     `/api/professor/simulados/${simuladoId}/painel?turma=${encodeURIComponent(turma)}`,
-    { headers: { "X-Professor-Token": professorToken } }
+    { token }
   );
+}
+
+// --- Acesso de professores/gestores (funcionários) ---
+export interface Funcionario {
+  id: number;
+  nome: string;
+  email: string;
+  papel: "professor" | "coordenacao" | "direcao";
+}
+
+export interface StaffLoginResponse {
+  access_token: string;
+  precisa_trocar_senha: boolean;
+  funcionario: Funcionario;
+}
+
+export function staffLogin(email: string, senha: string) {
+  return request<StaffLoginResponse>("/api/staff/login", {
+    method: "POST",
+    body: JSON.stringify({ email, senha }),
+  });
+}
+
+export function staffTrocarSenha(tokenTemporario: string, senhaNova: string) {
+  return request<StaffLoginResponse>("/api/staff/trocar-senha", {
+    method: "POST",
+    token: tokenTemporario,
+    body: JSON.stringify({ senha_nova: senhaNova }),
+  });
+}
+
+export function staffMe(token: string) {
+  return request<Funcionario>("/api/staff/me", { token });
+}
+
+export function staffSolicitarAcesso(nome: string, email: string) {
+  return request<{ detail: string }>("/api/staff/solicitar-acesso", {
+    method: "POST",
+    body: JSON.stringify({ nome, email }),
+  });
+}
+
+export interface SolicitacaoAcesso {
+  id: number;
+  nome: string;
+  email: string;
+  status: string;
+  criado_em: string;
+}
+
+export function listarSolicitacoes(token: string) {
+  return request<SolicitacaoAcesso[]>("/api/staff/solicitacoes", { token });
+}
+
+export function aprovarSolicitacao(token: string, id: number) {
+  return request<SolicitacaoAcesso>(`/api/staff/solicitacoes/${id}/aprovar`, {
+    method: "POST",
+    token,
+  });
+}
+
+export function recusarSolicitacao(token: string, id: number) {
+  return request<SolicitacaoAcesso>(`/api/staff/solicitacoes/${id}/recusar`, {
+    method: "POST",
+    token,
+  });
 }
 
 // --- Modo treino ---
@@ -262,22 +324,18 @@ export interface SimuladoCriarRequest {
   modo_sorteio?: string;
 }
 
-export function listarTurmasProfessor(professorToken: string) {
-  return request<TurmaOut[]>("/api/professor/turmas", {
-    headers: { "X-Professor-Token": professorToken },
-  });
+export function listarTurmasProfessor(token: string) {
+  return request<TurmaOut[]>("/api/professor/turmas", { token });
 }
 
-export function listarSimuladosProfessor(professorToken: string) {
-  return request<SimuladoCriado[]>("/api/professor/simulados", {
-    headers: { "X-Professor-Token": professorToken },
-  });
+export function listarSimuladosProfessor(token: string) {
+  return request<SimuladoCriado[]>("/api/professor/simulados", { token });
 }
 
-export function criarSimuladoProfessor(professorToken: string, payload: SimuladoCriarRequest) {
+export function criarSimuladoProfessor(token: string, payload: SimuladoCriarRequest) {
   return request<SimuladoCriado>("/api/professor/simulados", {
     method: "POST",
-    headers: { "X-Professor-Token": professorToken },
+    token,
     body: JSON.stringify(payload),
   });
 }

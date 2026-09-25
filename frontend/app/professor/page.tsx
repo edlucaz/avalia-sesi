@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ApiError,
+  Funcionario,
   PainelSimulado,
   SimuladoCriado,
+  SolicitacaoAcesso,
   TurmaOut,
+  aprovarSolicitacao,
   buscarPainelProfessor,
   criarSimuladoProfessor,
   listarSimuladosProfessor,
+  listarSolicitacoes,
   listarTurmasProfessor,
+  recusarSolicitacao,
 } from "@/lib/api";
 import { corDesempenho } from "@/lib/desempenho";
+import { lerSessaoStaff, limparSessaoStaff } from "@/lib/session";
 import Marca from "@/components/Marca";
 
 const NOME_DISCIPLINA: Record<string, string> = {
@@ -19,9 +26,17 @@ const NOME_DISCIPLINA: Record<string, string> = {
   matematica: "Matemática",
 };
 
+const NOME_PAPEL: Record<string, string> = {
+  professor: "Professor(a)",
+  coordenacao: "Coordenação",
+  direcao: "Direção",
+};
+
 export default function PainelProfessorPage() {
-  const [tokenProfessor, setTokenProfessor] = useState("");
-  const [mostrarToken, setMostrarToken] = useState(false);
+  const router = useRouter();
+  const [token, setToken] = useState<string | null>(null);
+  const [funcionario, setFuncionario] = useState<Funcionario | null>(null);
+
   const [simuladoId, setSimuladoId] = useState("1");
   const [turma, setTurma] = useState("5A");
   const [painel, setPainel] = useState<PainelSimulado | null>(null);
@@ -36,40 +51,78 @@ export default function PainelProfessorPage() {
   const [qtdLp, setQtdLp] = useState("5");
   const [tempoLimiteNovo, setTempoLimiteNovo] = useState("30");
   const [diasDisponivel, setDiasDisponivel] = useState("30");
-  const [modoSorteioNovo, setModoSorteioNovo] = useState<"por_aluno" | "turma_fixa">("por_aluno");
+  const [modoSorteioNovo, setModoSorteioNovo] = useState<"por_aluno" | "turma_fixa">("turma_fixa");
   const [simuladosExistentes, setSimuladosExistentes] = useState<SimuladoCriado[] | null>(null);
   const [criando, setCriando] = useState(false);
   const [erroCriar, setErroCriar] = useState<string | null>(null);
   const [sucessoCriar, setSucessoCriar] = useState<SimuladoCriado | null>(null);
 
+  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoAcesso[] | null>(null);
+  const [processandoSolicitacao, setProcessandoSolicitacao] = useState<number | null>(null);
+
+  useEffect(() => {
+    const sessao = lerSessaoStaff();
+    if (!sessao) {
+      router.replace("/login");
+      return;
+    }
+    setToken(sessao.token);
+    setFuncionario(sessao.funcionario);
+  }, [router]);
+
+  useEffect(() => {
+    if (!token) return;
+    carregarTudo(token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  async function carregarTudo(tk: string) {
+    try {
+      const [turmasRes, simuladosRes, solicitacoesRes] = await Promise.all([
+        listarTurmasProfessor(tk),
+        listarSimuladosProfessor(tk),
+        listarSolicitacoes(tk),
+      ]);
+      setTurmasDisponiveis(turmasRes);
+      setSimuladosExistentes(simuladosRes);
+      setSolicitacoes(solicitacoesRes);
+    } catch (err) {
+      setErroCriar(err instanceof ApiError ? err.message : "Não foi possível carregar os dados.");
+    }
+  }
+
+  function sair() {
+    limparSessaoStaff();
+    router.replace("/login");
+  }
+
+  async function processarSolicitacao(id: number, aprovar: boolean) {
+    if (!token) return;
+    setProcessandoSolicitacao(id);
+    try {
+      if (aprovar) await aprovarSolicitacao(token, id);
+      else await recusarSolicitacao(token, id);
+      setSolicitacoes(await listarSolicitacoes(token));
+    } catch (err) {
+      setErroCriar(err instanceof ApiError ? err.message : "Não foi possível processar a solicitação.");
+    } finally {
+      setProcessandoSolicitacao(null);
+    }
+  }
+
   async function buscar(e: React.FormEvent) {
     e.preventDefault();
+    if (!token) return;
     setErro(null);
     setCarregando(true);
     setPainel(null);
     try {
-      const dados = await buscarPainelProfessor(tokenProfessor, Number(simuladoId), turma);
+      const dados = await buscarPainelProfessor(token, Number(simuladoId), turma);
       setPainel(dados);
     } catch (err) {
       setErro(err instanceof ApiError ? err.message : "Não foi possível carregar o painel.");
     } finally {
       setCarregando(false);
-    }
-  }
-
-  async function carregarPainelLancamento() {
-    setErroCriar(null);
-    try {
-      const [turmasRes, simuladosRes] = await Promise.all([
-        listarTurmasProfessor(tokenProfessor),
-        listarSimuladosProfessor(tokenProfessor),
-      ]);
-      setTurmasDisponiveis(turmasRes);
-      setSimuladosExistentes(simuladosRes);
-    } catch (err) {
-      setErroCriar(
-        err instanceof ApiError ? err.message : "Não foi possível carregar turmas/simulados."
-      );
     }
   }
 
@@ -81,6 +134,7 @@ export default function PainelProfessorPage() {
 
   async function criarSimulado(e: React.FormEvent) {
     e.preventDefault();
+    if (!token) return;
     setErroCriar(null);
     setSucessoCriar(null);
     if (!turmasSelecionadas.length) {
@@ -89,7 +143,7 @@ export default function PainelProfessorPage() {
     }
     setCriando(true);
     try {
-      const criado = await criarSimuladoProfessor(tokenProfessor, {
+      const criado = await criarSimuladoProfessor(token, {
         titulo: tituloNovo,
         etapa: Number(etapaNovo),
         turmas: turmasSelecionadas,
@@ -100,8 +154,7 @@ export default function PainelProfessorPage() {
         modo_sorteio: modoSorteioNovo,
       });
       setSucessoCriar(criado);
-      const lista = await listarSimuladosProfessor(tokenProfessor);
-      setSimuladosExistentes(lista);
+      setSimuladosExistentes(await listarSimuladosProfessor(token));
     } catch (err) {
       setErroCriar(err instanceof ApiError ? err.message : "Não foi possível criar o simulado.");
     } finally {
@@ -109,27 +162,67 @@ export default function PainelProfessorPage() {
     }
   }
 
+  if (!funcionario) return null;
+
   return (
     <div>
       <header className="cabecalho">
         <Marca />
-        <span>Painel do professor</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span>
+            {funcionario.nome} · {NOME_PAPEL[funcionario.papel] || funcionario.papel}
+          </span>
+          <button className="botao-secundario" style={{ width: "auto", padding: "8px 16px" }} onClick={sair}>
+            Sair
+          </button>
+        </div>
       </header>
 
       <div className="pagina">
+        {solicitacoes && solicitacoes.length > 0 && (
+          <>
+            <h1>Solicitações de acesso</h1>
+            <p className="subtitulo">Pedidos de professores novos aguardando aprovação.</p>
+            <table className="tabela-alunos" style={{ marginBottom: 32 }}>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {solicitacoes.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.nome}</td>
+                    <td>{s.email}</td>
+                    <td style={{ display: "flex", gap: 8 }}>
+                      <button
+                        className="botao-primario"
+                        style={{ width: "auto", padding: "6px 14px", fontSize: 13 }}
+                        disabled={processandoSolicitacao === s.id}
+                        onClick={() => processarSolicitacao(s.id, true)}
+                      >
+                        Aprovar
+                      </button>
+                      <button
+                        className="botao-secundario"
+                        style={{ width: "auto", padding: "6px 14px", fontSize: 13 }}
+                        disabled={processandoSolicitacao === s.id}
+                        onClick={() => processarSolicitacao(s.id, false)}
+                      >
+                        Recusar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+
         <h1>Lançar simulado</h1>
-        <p className="subtitulo">
-          Digite o token, carregue as turmas e configure o sorteio (por aluno ou fixo pra turma).
-        </p>
-        <button
-          type="button"
-          className="botao-secundario"
-          style={{ width: "auto", padding: "10px 20px", marginBottom: 16 }}
-          onClick={carregarPainelLancamento}
-          disabled={!tokenProfessor}
-        >
-          Carregar turmas e simulados
-        </button>
+        <p className="subtitulo">Escolha as turmas e configure o sorteio (padrão: mesmas questões pra turma toda).</p>
 
         {erroCriar && <div className="erro">{erroCriar}</div>}
         {sucessoCriar && (
@@ -198,8 +291,8 @@ export default function PainelProfessorPage() {
                 value={modoSorteioNovo}
                 onChange={(e) => setModoSorteioNovo(e.target.value as "por_aluno" | "turma_fixa")}
               >
-                <option value="por_aluno">Por aluno — cada um recebe um sorteio próprio</option>
                 <option value="turma_fixa">Turma fixa — todo mundo recebe o mesmo sorteio</option>
+                <option value="por_aluno">Por aluno — cada um recebe um sorteio próprio</option>
               </select>
             </div>
 
@@ -248,24 +341,6 @@ export default function PainelProfessorPage() {
           onSubmit={buscar}
           style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end", marginBottom: 24 }}
         >
-          <div className="campo campo-com-botao" style={{ marginBottom: 0, flex: "1 1 200px" }}>
-            <label htmlFor="token">Token de acesso</label>
-            <input
-              id="token"
-              type={mostrarToken ? "text" : "password"}
-              value={tokenProfessor}
-              onChange={(e) => setTokenProfessor(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              className="botao-mostrar"
-              onClick={() => setMostrarToken((v) => !v)}
-              aria-label={mostrarToken ? "Ocultar token" : "Mostrar token"}
-            >
-              {mostrarToken ? "Ocultar" : "Mostrar"}
-            </button>
-          </div>
           <div className="campo" style={{ marginBottom: 0, flex: "1 1 100px" }}>
             <label htmlFor="simuladoId">Simulado (ID)</label>
             <input id="simuladoId" value={simuladoId} onChange={(e) => setSimuladoId(e.target.value)} required />

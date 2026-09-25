@@ -125,6 +125,48 @@ class ResultadoTreino(BaseModel):
     comentario_pedagogico: Optional[str] = None
 
 
+# --- Acesso de professores/gestores (funcionários) ---
+class FuncionarioOut(BaseModel):
+    id: int
+    nome: str
+    email: str
+    papel: str
+
+    class Config:
+        from_attributes = True
+
+
+class StaffLoginRequest(BaseModel):
+    email: str
+    senha: str
+
+
+class StaffLoginResponse(BaseModel):
+    access_token: str
+    precisa_trocar_senha: bool
+    funcionario: FuncionarioOut
+
+
+class TrocarSenhaRequest(BaseModel):
+    senha_nova: str
+
+
+class SolicitarAcessoRequest(BaseModel):
+    nome: str
+    email: str
+
+
+class SolicitacaoOut(BaseModel):
+    id: int
+    nome: str
+    email: str
+    status: str
+    criado_em: datetime
+
+    class Config:
+        from_attributes = True
+
+
 # --- Painel do professor ---
 class AlunoPainel(BaseModel):
     aluno: str
@@ -162,7 +204,7 @@ class SimuladoCriarRequest(BaseModel):
     turmas: list[str]
     qtd_matematica: int = 5
     qtd_portugues: int = 5
-    modo_sorteio: str = "por_aluno"  # "por_aluno" | "turma_fixa"
+    modo_sorteio: str = "turma_fixa"  # "por_aluno" | "turma_fixa"
 
 
 class SimuladoCriado(BaseModel):
