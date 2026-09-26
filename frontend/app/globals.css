@@ -759,6 +759,27 @@ a:focus-visible {
   accent-color: var(--sesi-azul-marinho);
 }
 
+.opcao-checkbox.selecionada {
+  border-color: var(--sesi-azul-marinho);
+  background: white;
+  box-shadow: 0 0 0 1px var(--sesi-azul-marinho);
+}
+
+.escolha-prova {
+  border: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.escolha-prova legend {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.escolha-prova .opcao-checkbox {
+  margin: 8px 0;
+}
+
 /* --- Leitor de apoio (leitura em voz alta das questões) --- */
 .controle-leitor {
   display: flex;

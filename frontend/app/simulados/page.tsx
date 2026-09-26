@@ -101,24 +101,15 @@ export default function ListaSimuladosPage() {
                 </div>
               </div>
               {s.ultima_tentativa_id !== null ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {s.resultado_disponivel && (
-                    <button
-                      className="botao-primario"
-                      style={{ width: "auto", padding: "12px 22px" }}
-                      onClick={() => router.push(`/resultado/${s.ultima_tentativa_id}`)}
-                    >
-                      Ver resultado
-                    </button>
-                  )}
+                s.resultado_disponivel && (
                   <button
-                    className="botao-secundario"
-                    style={{ width: "auto", padding: "10px 22px" }}
-                    onClick={() => router.push(`/simulados/${s.id}`)}
+                    className="botao-primario"
+                    style={{ width: "auto", padding: "12px 22px" }}
+                    onClick={() => router.push(`/resultado/${s.ultima_tentativa_id}`)}
                   >
-                    Refazer
+                    Ver resultado
                   </button>
-                </div>
+                )
               ) : (
                 <button
                   className="botao-primario"

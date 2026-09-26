@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -40,6 +41,13 @@ def listar_turmas(
 def _simulado_out(s: Simulado, db: Session) -> SimuladoCriado:
     vinculos = vinculos_do_simulado(db, s.id)
     turmas = sorted(s.turmas_alvo, key=lambda t: t.nome)
+    donos_sorteio = {sq.turma_id for sq in s.questoes}
+
+    def prova(turma_id: int) -> Optional[str]:
+        if turma_id in donos_sorteio:
+            return "propria"
+        return "compartilhada" if None in donos_sorteio else None
+
     return SimuladoCriado(
         id=s.id,
         titulo=s.titulo,
@@ -52,7 +60,10 @@ def _simulado_out(s: Simulado, db: Session) -> SimuladoCriado:
         tempo_limite_min=s.tempo_limite_min,
         turmas_liberacao=[
             TurmaLiberacao(
-                turma=t.nome, liberado=vinculos[t.id][0], mostrar_resultado=vinculos[t.id][1]
+                turma=t.nome,
+                liberado=vinculos[t.id][0],
+                mostrar_resultado=vinculos[t.id][1],
+                prova=prova(t.id),
             )
             for t in turmas
         ],
@@ -90,13 +101,15 @@ def liberar_simulado(
     db: Session = Depends(get_db),
 ):
     simulado, turma = _simulado_e_turma_do_professor(simulado_id, payload.turma, funcionario, db)
+    if vinculos_do_simulado(db, simulado.id)[turma.id][0]:
+        raise HTTPException(status_code=409, detail=f"Este simulado já foi liberado para o {turma.nome}")
+    # Sorteia já na liberação: a turma inteira começa com o conjunto pronto.
+    if not simulado.sorteia_por_aluno():
+        _garantir_questoes_turma_fixa(simulado, db, turma.id, prova_propria=payload.nova_prova)
     atualizar_vinculo(
         db, simulado.id, [turma.id], liberado=True, mostrar_resultado=payload.mostrar_resultado
     )
     db.commit()
-    # Sorteia já na liberação: a turma inteira começa com o conjunto pronto.
-    if not simulado.sorteia_por_aluno():
-        _garantir_questoes_turma_fixa(simulado, db)
     return _simulado_out(simulado, db)
 
 
@@ -149,6 +162,9 @@ def criar_simulado(
         db, simulado.id, [t.id for t in turmas], mostrar_resultado=payload.mostrar_resultado
     )
     db.commit()
+    if modo == ModoSorteio.TURMA_FIXA and payload.prova_por_turma and len(turmas) > 1:
+        for t in turmas:
+            _garantir_questoes_turma_fixa(simulado, db, t.id, prova_propria=True)
     db.refresh(simulado)
     return _simulado_out(simulado, db)
 

@@ -39,7 +39,16 @@ def _tentativa_do_aluno(tentativa_id: int, aluno: Aluno, db: Session) -> Tentati
     return tentativa
 
 
-def _sortear_questoes(simulado: Simulado, db: Session) -> list[Questao]:
+def _escolher(banco: list[Questao], qtd: int, evitar: set[int]) -> list[Questao]:
+    """Sorteia priorizando questões fora de `evitar`; só repete se o banco não der."""
+    qtd = min(qtd, len(banco))
+    novas = [q for q in banco if q.id not in evitar]
+    escolhidas = random.sample(novas, min(qtd, len(novas)))
+    repetidas = [q for q in banco if q.id in evitar]
+    return escolhidas + random.sample(repetidas, qtd - len(escolhidas))
+
+
+def _sortear_questoes(simulado: Simulado, db: Session, evitar: set[int] = frozenset()) -> list[Questao]:
     banco_mt = (
         db.query(Questao)
         .filter(Questao.etapa == simulado.etapa, Questao.disciplina == Disciplina.MATEMATICA)
@@ -50,28 +59,51 @@ def _sortear_questoes(simulado: Simulado, db: Session) -> list[Questao]:
         .filter(Questao.etapa == simulado.etapa, Questao.disciplina == Disciplina.PORTUGUES)
         .all()
     )
-    escolhidas = random.sample(banco_mt, min(simulado.qtd_matematica or 0, len(banco_mt)))
-    escolhidas += random.sample(banco_lp, min(simulado.qtd_portugues or 0, len(banco_lp)))
+    escolhidas = _escolher(banco_mt, simulado.qtd_matematica or 0, evitar)
+    escolhidas += _escolher(banco_lp, simulado.qtd_portugues or 0, evitar)
     random.shuffle(escolhidas)
     return escolhidas
 
 
-def _garantir_questoes_turma_fixa(simulado: Simulado, db: Session):
-    """No modo turma_fixa, o sorteio acontece uma única vez (na primeira tentativa
-    de qualquer aluno) e fica salvo no próprio simulado, compartilhado por todos."""
-    if simulado.questoes:
-        return
-    # Trava a linha do simulado (Postgres) para que alunos começando ao mesmo
-    # tempo não sorteiem cada um o seu conjunto e somem as questões.
-    db.query(Simulado).filter(Simulado.id == simulado.id).with_for_update().one()
-    if db.query(SimuladoQuestao).filter(SimuladoQuestao.simulado_id == simulado.id).count():
+def _garantir_questoes_turma_fixa(
+    simulado: Simulado, db: Session, turma_id: int, prova_propria: bool = False
+):
+    """No modo turma_fixa, o sorteio acontece uma única vez e fica salvo no
+    simulado. Por padrão as turmas compartilham o mesmo sorteio; com
+    `prova_propria`, a turma ganha um sorteio só dela, evitando as questões que
+    as outras turmas já receberam."""
+
+    def ja_sorteado() -> bool:
+        donos = {
+            t
+            for (t,) in db.query(SimuladoQuestao.turma_id)
+            .filter(SimuladoQuestao.simulado_id == simulado.id)
+            .distinct()
+        }
+        return turma_id in donos or (not prova_propria and None in donos)
+
+    if not ja_sorteado():
+        # Trava a linha do simulado (Postgres) para que alunos começando ao mesmo
+        # tempo não sorteiem cada um o seu conjunto e somem as questões.
+        db.query(Simulado).filter(Simulado.id == simulado.id).with_for_update().one()
+        if not ja_sorteado():
+            usadas = {
+                qid
+                for (qid,) in db.query(SimuladoQuestao.questao_id).filter(
+                    SimuladoQuestao.simulado_id == simulado.id
+                )
+            }
+            escolhidas = _sortear_questoes(simulado, db, evitar=usadas)
+            for ordem, questao in enumerate(escolhidas, start=1):
+                db.add(
+                    SimuladoQuestao(
+                        simulado_id=simulado.id,
+                        questao_id=questao.id,
+                        ordem=ordem,
+                        turma_id=turma_id if prova_propria else None,
+                    )
+                )
         db.commit()
-        db.refresh(simulado)
-        return
-    escolhidas = _sortear_questoes(simulado, db)
-    for ordem, questao in enumerate(escolhidas, start=1):
-        db.add(SimuladoQuestao(simulado_id=simulado.id, questao_id=questao.id, ordem=ordem))
-    db.commit()
     db.refresh(simulado)
 
 
@@ -144,9 +176,11 @@ def iniciar_simulado(
         .order_by(Tentativa.id.desc())
         .first()
     )
-    # Por enquanto, permite refazer o simulado: se a tentativa mais recente já
-    # foi enviada, começa uma tentativa nova em vez de bloquear.
-    nova_tentativa = not tentativa or tentativa.status == StatusTentativa.ENVIADO
+    # Avaliação: cada aluno faz uma vez só. Uma tentativa em andamento (ex.: a
+    # internet caiu) é retomada de onde parou, com o tempo correndo.
+    if tentativa and tentativa.status == StatusTentativa.ENVIADO:
+        raise HTTPException(status_code=409, detail="Você já fez este simulado")
+    nova_tentativa = not tentativa
     if nova_tentativa:
         tentativa = Tentativa(aluno_id=aluno.id, simulado_id=simulado_id)
         db.add(tentativa)
@@ -157,7 +191,7 @@ def iniciar_simulado(
         if nova_tentativa:
             _gerar_questoes_por_aluno(tentativa, db)
     else:
-        _garantir_questoes_turma_fixa(simulado, db)
+        _garantir_questoes_turma_fixa(simulado, db, aluno.turma_id)
 
     _expirar_se_necessario(tentativa, db)
     if tentativa.status == StatusTentativa.ENVIADO:

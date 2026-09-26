@@ -281,11 +281,13 @@ class SimuladoCriarRequest(BaseModel):
     qtd_portugues: int = 5
     modo_sorteio: str = "turma_fixa"  # "por_aluno" | "turma_fixa"
     mostrar_resultado: bool = True
+    prova_por_turma: bool = False  # turma_fixa: cada turma recebe questões diferentes
 
 
 class LiberarSimuladoRequest(BaseModel):
     turma: str
     mostrar_resultado: bool = True
+    nova_prova: bool = False  # turma_fixa: gera prova diferente da(s) outra(s) turma(s)
 
 
 class AlterarResultadoRequest(BaseModel):
@@ -297,6 +299,7 @@ class TurmaLiberacao(BaseModel):
     turma: str
     liberado: bool
     mostrar_resultado: bool
+    prova: Optional[str] = None  # "propria" | "compartilhada" | None (ainda não sorteada)
 
 
 class SimuladoCriado(BaseModel):

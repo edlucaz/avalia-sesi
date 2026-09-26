@@ -428,6 +428,7 @@ export interface TurmaLiberacao {
   turma: string;
   liberado: boolean;
   mostrar_resultado: boolean;
+  prova: "propria" | "compartilhada" | null;
 }
 
 export interface SimuladoCriarRequest {
@@ -441,6 +442,7 @@ export interface SimuladoCriarRequest {
   qtd_portugues?: number;
   modo_sorteio?: string;
   mostrar_resultado?: boolean;
+  prova_por_turma?: boolean;
 }
 
 export function listarTurmasProfessor(token: string) {
@@ -463,12 +465,13 @@ export function liberarSimuladoProfessor(
   token: string,
   simuladoId: number,
   turma: string,
-  mostrarResultado: boolean
+  mostrarResultado: boolean,
+  novaProva: boolean
 ) {
   return request<SimuladoCriado>(`/api/professor/simulados/${simuladoId}/liberar`, {
     method: "POST",
     token,
-    body: JSON.stringify({ turma, mostrar_resultado: mostrarResultado }),
+    body: JSON.stringify({ turma, mostrar_resultado: mostrarResultado, nova_prova: novaProva }),
   });
 }
 

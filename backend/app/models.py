@@ -142,6 +142,9 @@ class SimuladoQuestao(Base):
     simulado_id = Column(Integer, ForeignKey("simulados.id"), nullable=False)
     questao_id = Column(Integer, ForeignKey("questoes.id"), nullable=False)
     ordem = Column(Integer, nullable=False, default=0)
+    # NULL = sorteio compartilhado pelas turmas; preenchido = prova própria da
+    # turma (o professor escolheu gerar uma prova diferente da outra sala).
+    turma_id = Column(Integer, ForeignKey("turmas.id"), nullable=True)
 
     questao = relationship("Questao")
 
@@ -179,6 +182,11 @@ class Simulado(Base):
     def sorteia_por_aluno(self) -> bool:
         return self.modo_sorteio == ModoSorteio.POR_ALUNO
 
+    def questoes_da_turma(self, turma_id: int) -> list["SimuladoQuestao"]:
+        """Modo turma_fixa: a prova própria da turma, se houver; senão a compartilhada."""
+        proprias = [sq for sq in self.questoes if sq.turma_id == turma_id]
+        return proprias or [sq for sq in self.questoes if sq.turma_id is None]
+
 
 class Tentativa(Base):
     __tablename__ = "tentativas"
@@ -201,7 +209,7 @@ class Tentativa(Base):
     def questoes_da_prova(self) -> list["Questao"]:
         if self.simulado.sorteia_por_aluno():
             return [tq.questao for tq in self.questoes_sorteadas]
-        return [sq.questao for sq in self.simulado.questoes]
+        return [sq.questao for sq in self.simulado.questoes_da_turma(self.aluno.turma_id)]
 
 
 class TentativaQuestao(Base):

@@ -64,6 +64,9 @@ export default function PainelProfessorPage() {
   // Simulado + turma sendo liberados (abre a janela de confirmação).
   const [liberacao, setLiberacao] = useState<{ simulado: SimuladoCriado; turma: string } | null>(null);
   const [mostrarResultadoLiberar, setMostrarResultadoLiberar] = useState(true);
+  // null = professor ainda não escolheu entre manter a prova da outra turma ou gerar uma nova.
+  const [novaProvaLiberar, setNovaProvaLiberar] = useState<boolean | null>(null);
+  const [provaPorTurmaNovo, setProvaPorTurmaNovo] = useState(false);
   const [acaoEmAndamento, setAcaoEmAndamento] = useState<string | null>(null);
   const [erroLiberar, setErroLiberar] = useState<string | null>(null);
 
@@ -149,6 +152,7 @@ export default function PainelProfessorPage() {
   function abrirLiberacao(simulado: SimuladoCriado, turma: string) {
     setErroLiberar(null);
     setMostrarResultadoLiberar(true);
+    setNovaProvaLiberar(null);
     setLiberacao({ simulado, turma });
   }
 
@@ -157,7 +161,9 @@ export default function PainelProfessorPage() {
     const { simulado, turma } = liberacao;
     setAcaoEmAndamento(`${simulado.id}-${turma}`);
     try {
-      atualizarNaLista(await liberarSimuladoProfessor(token, simulado.id, turma, mostrarResultadoLiberar));
+      atualizarNaLista(
+        await liberarSimuladoProfessor(token, simulado.id, turma, mostrarResultadoLiberar, novaProvaLiberar === true)
+      );
       setLiberacao(null);
     } catch (err) {
       setErroLiberar(err instanceof ApiError ? err.message : "Não foi possível liberar o simulado.");
@@ -200,6 +206,7 @@ export default function PainelProfessorPage() {
         dias_disponivel: Number(diasDisponivel),
         modo_sorteio: modoSorteioNovo,
         mostrar_resultado: mostrarResultadoNovo,
+        prova_por_turma: provaPorTurmaNovo,
       });
       setSucessoCriar(criado);
       setSimuladosExistentes(await listarSimuladosProfessor(token));
@@ -211,6 +218,16 @@ export default function PainelProfessorPage() {
   }
 
   if (!funcionario) return null;
+
+  // Turmas que já receberam este simulado: com sorteio único por turma, o
+  // professor escolhe se a próxima turma faz a mesma prova ou uma nova.
+  const escolhaDeProva =
+    liberacao && liberacao.simulado.modo_sorteio === "turma_fixa"
+      ? liberacao.simulado.turmas_liberacao
+          .filter((t) => t.liberado && t.turma !== liberacao.turma)
+          .map((t) => t.turma)
+          .join(", ") || null
+      : null;
 
   return (
     <div>
@@ -346,6 +363,21 @@ export default function PainelProfessorPage() {
               </select>
             </div>
 
+            {modoSorteioNovo === "turma_fixa" && turmasSelecionadas.length > 1 && (
+              <label className="opcao-checkbox">
+                <input
+                  type="checkbox"
+                  checked={provaPorTurmaNovo}
+                  onChange={(e) => setProvaPorTurmaNovo(e.target.checked)}
+                />
+                <span>
+                  <strong>Prova diferente para cada turma</strong>
+                  <br />
+                  Cada turma recebe questões diferentes (evita troca de respostas entre as salas).
+                </span>
+              </label>
+            )}
+
             <label className="opcao-checkbox">
               <input
                 type="checkbox"
@@ -409,6 +441,9 @@ export default function PainelProfessorPage() {
                             {t.liberado ? (
                               <>
                                 <span className="status-pill enviado">Liberado</span>
+                                {t.prova === "propria" && s.turmas_liberacao.length > 1 && (
+                                  <span className="status-pill nao-fez">Prova própria</span>
+                                )}
                                 <span className={`status-pill ${t.mostrar_resultado ? "enviado" : "nao-fez"}`}>
                                   {t.mostrar_resultado ? "Resultado visível" : "Resultado oculto"}
                                 </span>
@@ -576,6 +611,37 @@ export default function PainelProfessorPage() {
               {formatarDataBrasilia(liberacao.simulado.janela_fim)}, com{" "}
               {liberacao.simulado.tempo_limite_min} minutos de prova.
             </p>
+            {escolhaDeProva && (
+              <fieldset className="escolha-prova">
+                <legend>Qual prova o {liberacao.turma} vai fazer?</legend>
+                <label className={`opcao-checkbox ${novaProvaLiberar === false ? "selecionada" : ""}`}>
+                  <input
+                    type="radio"
+                    name="prova"
+                    checked={novaProvaLiberar === false}
+                    onChange={() => setNovaProvaLiberar(false)}
+                  />
+                  <span>
+                    <strong>Manter a mesma prova do {escolhaDeProva}</strong>
+                    <br />
+                    Mesmas questões — bom para comparar as turmas.
+                  </span>
+                </label>
+                <label className={`opcao-checkbox ${novaProvaLiberar === true ? "selecionada" : ""}`}>
+                  <input
+                    type="radio"
+                    name="prova"
+                    checked={novaProvaLiberar === true}
+                    onChange={() => setNovaProvaLiberar(true)}
+                  />
+                  <span>
+                    <strong>Gerar uma prova nova</strong>
+                    <br />
+                    Questões diferentes das do {escolhaDeProva}, com o mesmo número de questões.
+                  </span>
+                </label>
+              </fieldset>
+            )}
             <label className="opcao-checkbox">
               <input
                 type="checkbox"
@@ -594,7 +660,7 @@ export default function PainelProfessorPage() {
             <button
               className="botao-primario"
               onClick={confirmarLiberacao}
-              disabled={acaoEmAndamento !== null}
+              disabled={acaoEmAndamento !== null || (escolhaDeProva !== null && novaProvaLiberar === null)}
             >
               {acaoEmAndamento !== null ? "Liberando..." : `Liberar para o ${liberacao.turma}`}
             </button>
